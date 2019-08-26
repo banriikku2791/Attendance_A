@@ -1,0 +1,19 @@
+<% provide(:title, "ログイン") %>
+<% provide(:class_text, 'login') %>
+<h1><%= yield(:title) %></h1>
+<div class="row">
+  <div class="col-md-6 col-md-offset-3">
+    <%= form_with(scope: :session, url: login_path, local: true) do |f| %>
+      <%= f.label :email, "メールアドレス", class: "label-#{yield(:class_text)}" %>
+      <%= f.email_field :email, class: 'form-control' %>
+      <%= f.label :password, "パスワード", class: "label-#{yield(:class_text)}" %>
+      <%= f.password_field :password, class: 'form-control' %>
+      <%= f.label :remember_me, class: "checkbox inline checkbox-#{yield(:class_text)}", for: "remember-me" do %>
+      <%= f.check_box :remember_me, id: "remember-me" %>
+        <span>パスワードを記憶しますか？</span>
+      <% end %>
+      <%= f.submit yield(:title), class: "btn btn-primary btn-block btn-#{yield(:class_text)}" %>
+    <% end %>
+    <p>新規ユーザーですか？<%= link_to "アカウント登録はこちら", signup_path %></p>
+  </div>
+</div>
