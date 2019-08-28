@@ -1,0 +1,2 @@
+class AttendanceChange < ApplicationRecord
+end

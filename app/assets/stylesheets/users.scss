@@ -4,9 +4,11 @@
 
 /* ユーザー情報テーブル */
 
-.user-table {
-  vertical-align: bottom;
-  text-align: center;
+#user-table {
+  td {
+    vertical-align: bottom;
+    text-align: center;
+  }
 }
 
 /* ユーザー情報下ボタン */
@@ -14,6 +16,11 @@
 .btn-users-show {
   margin-top: -10px;
   margin-bottom: 10px;
+}
+
+.btn-users-show2 {
+  margin-top: -10px;
+  margin-bottom: 20px;
 }
 
 /* ユーザー勤怠情報テーブル */
@@ -24,7 +31,7 @@
     text-align: center;
   }
   td {
-    vertical-align: middle;
+    vertical-align: bottom;
     text-align: center;
   }
 }

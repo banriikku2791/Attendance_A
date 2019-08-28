@@ -1,0 +1,27 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  worked_on: 2019-08-27
+  note: MyString
+  after_started_at: 2019-08-27 04:10:23
+  after_finished_at: 2019-08-27 04:10:23
+  before_started_at: 2019-08-27 04:10:23
+  before_finished_at: 2019-08-27 04:10:23
+  superior_employee_number: 1
+  request: MyString
+  request_at: 2019-08-27 04:10:23
+  confirm_at: 2019-08-27 04:10:23
+  user_id: 1
+
+two:
+  worked_on: 2019-08-27
+  note: MyString
+  after_started_at: 2019-08-27 04:10:23
+  after_finished_at: 2019-08-27 04:10:23
+  before_started_at: 2019-08-27 04:10:23
+  before_finished_at: 2019-08-27 04:10:23
+  superior_employee_number: 1
+  request: MyString
+  request_at: 2019-08-27 04:10:23
+  confirm_at: 2019-08-27 04:10:23
+  user_id: 1

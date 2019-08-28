@@ -10,7 +10,50 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20190826001041) do
+ActiveRecord::Schema.define(version: 20190827043059) do
+
+  create_table "attendance_changes", force: :cascade do |t|
+    t.date "worked_on"
+    t.string "note"
+    t.datetime "after_started_at"
+    t.datetime "after_finished_at"
+    t.datetime "before_started_at"
+    t.datetime "before_finished_at"
+    t.integer "superior_employee_number"
+    t.string "request"
+    t.datetime "request_at"
+    t.datetime "confirm_at"
+    t.integer "user_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_attendance_changes_on_user_id"
+  end
+
+  create_table "attendance_ends", force: :cascade do |t|
+    t.date "worked_on"
+    t.datetime "end_at"
+    t.string "reason"
+    t.integer "superior_employee_number"
+    t.string "request"
+    t.datetime "request_at"
+    t.datetime "confirm_at"
+    t.integer "user_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_attendance_ends_on_user_id"
+  end
+
+  create_table "attendance_fixes", force: :cascade do |t|
+    t.date "worked_on"
+    t.integer "superior_employee_number"
+    t.string "request"
+    t.datetime "request_at"
+    t.datetime "confirm_at"
+    t.integer "user_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_attendance_fixes_on_user_id"
+  end
 
   create_table "attendances", force: :cascade do |t|
     t.date "worked_on"
@@ -20,7 +63,19 @@ ActiveRecord::Schema.define(version: 20190826001041) do
     t.integer "user_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "end_at"
+    t.string "reason"
+    t.string "request_end"
+    t.string "request_change"
     t.index ["user_id"], name: "index_attendances_on_user_id"
+  end
+
+  create_table "bases", force: :cascade do |t|
+    t.integer "base_number"
+    t.string "base_name"
+    t.string "work_bunrui"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "users", force: :cascade do |t|
@@ -31,9 +86,15 @@ ActiveRecord::Schema.define(version: 20190826001041) do
     t.string "password_digest"
     t.string "remember_digest"
     t.boolean "admin", default: false
-    t.string "department"
-    t.datetime "basic_time", default: "2019-08-25 23:00:00"
-    t.datetime "work_time", default: "2019-08-25 22:30:00"
+    t.string "affiliation"
+    t.datetime "basic_time", default: "2019-08-27 23:00:00"
+    t.datetime "work_time", default: "2019-08-27 22:30:00"
+    t.boolean "superior", default: false
+    t.datetime "designated_work_start_time", default: "2019-08-28 00:00:00"
+    t.datetime "designated_work_end_time", default: "2019-08-28 09:00:00"
+    t.datetime "basic_work_time", default: "2019-08-27 23:00:00"
+    t.integer "employee_number"
+    t.string "uid"
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 

@@ -5,16 +5,18 @@ User.create!(name: "管理者",
              password: "password",
              password_confirmation: "password",
              admin: true,
-             department: "情報システム部")
+             affiliation: "情報システム部",
+             superior: false)
 
-60.times do |n|
+10.times do |n|
   name  = Faker::Name.name
   email = "sample-#{n+1}@email.com"
   password = "password"
-  department = "開発部"
+  affiliation = "開発部"
   User.create!(name: name,
                email: email,
                password: password,
                password_confirmation: password,
-               department: department)
+               affiliation: affiliation,
+               superior: false)
 end

@@ -1,0 +1,2 @@
+class AttendanceFix < ApplicationRecord
+end

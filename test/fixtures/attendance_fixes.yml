@@ -1,0 +1,17 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  worked_on: 2019-08-27
+  superior_employee_number: 1
+  request: MyString
+  request_at: 2019-08-27 04:23:20
+  confirm_at: 2019-08-27 04:23:20
+  user_id: 1
+
+two:
+  worked_on: 2019-08-27
+  superior_employee_number: 1
+  request: MyString
+  request_at: 2019-08-27 04:23:20
+  confirm_at: 2019-08-27 04:23:20
+  user_id: 1

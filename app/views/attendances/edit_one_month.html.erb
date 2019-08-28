@@ -9,10 +9,10 @@
           <th>曜日</th>
           <th>出社</th>
           <th>退社</th>
+          <th>翌日</th>
           <th>在社時間</th>
           <th>備考</th>
-          <th>残業指示</th>
-          <th>指示者</th>
+          <th>指示者確認㊞</th>
         </tr>
       </thead>
       <tbody>
@@ -35,14 +35,33 @@
                 <td><%= attendance.time_field :started_at, class: "form-control" %></td>
                 <td><%= attendance.time_field :finished_at, class: "form-control" %></td>
               <% end %>
+              <td></td>
               <td>
                 <% if day.started_at.present? && day.finished_at.present? %>
                   <%= working_times(day.started_at, day.finished_at) %>
                 <% end %>
               </td>
-              <td></td>
-              <td></td>
-              <td></td>
+              <% if Date.current < day.worked_on %>
+                <td><%= attendance.text_field :note, readonly: true, class: "form-control" %></td>
+                <td>
+                  <select name="example" disabled class="background:#fff;">
+                    <option value="上長0">プログラム化</option>
+                    <option value="上長A">上長A</option>
+                    <option value="上長B">上長B</option>
+                    <option value="上長C">上長C</option>
+                  </select>
+                </td>
+              <% else %>
+                <td><%= attendance.text_field :note, class: "form-control" %></td>
+                <td>
+                  <select name="example">
+                    <option value="上長0">プログラム化</option>
+                    <option value="上長A">上長A</option>
+                    <option value="上長B">上長B</option>
+                    <option value="上長C">上長C</option>
+                  </select>
+                </td>
+              <% end %>
             </tr>
           <% end %>
         <% end %>
@@ -50,7 +69,7 @@
     </table>
   </div>
   <div class="center">
-    <%= link_to "キャンセル", user_path(date: @first_day, chenge_mw: @select_area), class: "btn btn-lg btn-default" %>
+    <%= link_to "キャンセル", user_path(date: @first_day, chenge_mw: @select_area), class: "btn btn-lg btn-primary" %>
     <%= f.submit "編集を保存する", class: "btn btn-lg btn-primary" %>
   </div>
 <% end %>

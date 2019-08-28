@@ -1,60 +1,82 @@
 <% provide(:title, 'All Users') %>
-<% if params[:keyword].nil? %>
+<% provide(:class_text, 'user--edit') %>
 <h1>ユーザー一覧</h1>
-<% else %>
-<h1>検索結果</h1>
-<% end %>
-<div class="row">
-  <div class="col-md-4 col-md-offset-8">
-    <label>ユーザー名検索</label>
-    <form class="form-inline">
-      <div class="form-group">
-    <%= form_with(url: users_path, method: :get, local: true) do |f| %>
-      <%= f.text_field :keyword, value: @user_key, placeholder: "キーワードを入力...", class: "form-control" %><%= f.submit "検索", class: "btn btn-primary bt-xs" %>
-    <% end %>
+<div>
+  <%= form_with url: import_path, local: true do |f| %>
+  <div class="form-group form-inline">
+    <div class="search_item">
+      <%= button_tag 'ファイルを選択', class: %i(csv_input_btn), type: 'button', onclick: "$('#file_input').click();" %>
+      <%= f.text_field :filename, class: "form-control", id: "filename", disabled: true %>
+      <%= f.file_field :file_data, class: "form-control", id: "file_input", style: "display: none;", onchange: "file_selected($(this));" %>
     </div>
-    </form>
   </div>
+  <div>
+    <%= f.submit "CSVをインポート", class: "btn btn-primary"  %>
+  </div>
+  <% end %>
 </div>
+<br>
 <div class="col-md-10 col-md-offset-1">
   <%= will_paginate %>
-  <table class="table table-condensed table-hover" id="table-users">
-    <thead>
-      <tr>
-        <th class="center"><%= User.human_attribute_name :name %></th>
-        <th class="center"><%= User.human_attribute_name :department %></th>
-        <% if current_user.admin? %>
-          <th class="center"><%= User.human_attribute_name :basic_time %></th>
-          <th class="center"><%= User.human_attribute_name :work_time %></th>
-        <% end %>
-        <th></th>
-      </tr>
-    </thead>
+  <div class="panel-group" id="accordion">
     <% @users.each do |user| %>
       <tr>
-        <td>
-          <% if current_user.admin? %>
-            <%= link_to user.name, user %>
-          <% else %>
-            <%= user.name %>
-          <% end %>
-        </td>
-        <td><%= user.department.present? ? user.department : "未所属" %></td>
-        <% if current_user.admin? %>
-          <td class="center"><%= format_basic_info(user.basic_time) %></td>
-          <td class="center"><%= format_basic_info(user.work_time) %></td>
-        <% end %>
-        <td class="left">
-          <%= link_to "基本情報編集", edit_basic_info_user_path(user), remote: true, class: "btn btn-success" %>
-          <% if current_user.admin? && !current_user?(user) %>
-            <%= link_to "削除", user, method: :delete,
-              data: { confirm: "削除してよろしいですか？" }, class: "btn btn-danger" %>
-          <% end %>
-        </td>
+        <%= user.name %><br>|
+        <span class="mgl-10">
+          <%= link_to "削除", user, method: :delete,
+                data: { confirm: "削除してよろしいですか？" }, class: "btn btn-primary btn-sm" %>
+        </span>
       </tr>
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h4 class="panel-title">
+            <button class="btn btn-primary" 
+              data-toggle="collapse"
+              data-target="#collapse<%= user.id %>"
+              aria-expand="false" 
+              aria-controls="#collapse<%= user.id %>">編集</button>
+          </h4>
+        </div>
+        <div class="collapse" id="collapse<%= user.id %>" >
+          <div class="panel panel-body">
+              <%= form_with(model: user, url: update_all_user_path(user), local: true, method: :patch) do |f| %>
+                <%= f.label :name, class: "label-#{yield(:class_text)}" %>
+                <%= f.text_field :name, class: "form-control" %>
+                <%= f.label :email, class: "label-#{yield(:class_text)}" %>
+                <%= f.text_field :email, class: "form-control" %>
+                <%= f.label :affiliation, class: "label-#{yield(:class_text)}" %>
+                <%= f.text_field :affiliation, class: "form-control" %>
+                <%= f.label :employee_number, class: "label-#{yield(:class_text)}" %>
+                <%= f.text_field :employee_number, class: "form-control" %>
+                <%= f.label :uid, class: "label-#{yield(:class_text)}" %>
+                <%= f.text_field :uid, class: "form-control" %>
+                <%= f.label :password, class: "label-#{yield(:class_text)}" %>
+                <%= f.text_field :password, class: "form-control" %>
+                <%= f.label :basic_work_time, class: "label-#{yield(:class_text)}" %>
+                <%= f.time_field :basic_work_time, class: "form-control" %>
+                <%= f.label :designated_work_start_time, class: "label-#{yield(:class_text)}" %>
+                <%= f.time_field :designated_work_start_time, class: "form-control" %>
+                <%= f.label :designated_work_end_time, class: "label-#{yield(:class_text)}" %>
+                <%= f.time_field :designated_work_end_time, class: "form-control" %>
+                <div class="center">
+                  <br><%= f.submit "編集する", class: "btn btn-sm btn-primary" %>
+                </div>
+              <% end %>
+          </div>
+        </div>
+      </div>
+      <br>
     <% end %>
-  </table>
+  </div>
   <%= will_paginate %>
 </div>
+
 <!--モーダルウインドウ表示-->
 <div id="edit-basic-info" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>
+<!--ファイルアップロード用スクリプト-->
+<script type="text/javascript">
+  function file_selected(file_field){
+    var filename = $(file_field)[0].files[0].name;
+    $("#filename").val(filename);
+  }
+</script>
