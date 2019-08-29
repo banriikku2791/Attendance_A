@@ -1,0 +1,43 @@
+<% provide(:title, "拠点一覧") %>
+<% provide(:class_text, 'user--edit') %>
+<% provide(:button_text, '更新') %>
+
+<h1><%= yield(:title) %></h1>
+<div class="col-md-10 col-md-offset-1">
+  <%= will_paginate %>
+  <table class="table table-condensed table-hover table-bordered table-striped" id="table-users">
+    <thead class="thead-inverse">
+      <tr>
+        <th></th>
+        <th></th>
+        <th class="center"><%= t("activerecord.attributes.base.base_number") %></th>
+        <th class="center"><%= t("activerecord.attributes.base.base_name") %></th>
+        <th class="center"><%= t("activerecord.attributes.base.work_bunrui") %></th>
+      </tr>
+    </thead>
+    <tbody>
+    <% @bases.each do |base| %>
+      <tr>
+        <td class="center">
+          <%= link_to "修正", edit_basis_path(base), class: "btn btn-primary" %>
+        </td>
+        <td class="center">
+          <%= link_to "削除", basis_path(base), method: :delete,
+              data: { confirm: "削除してよろしいですか？" }, class: "btn btn-danger" %>
+        </td>
+        <td><%= base.base_number %></td>
+        <td><%= base.base_name %></td>
+        <td><%= base.work_bunrui.present? ? base.work_bunrui : "未設定" %></td>
+      </tr>
+    <% end %>
+    </tbody>
+  </table>
+  <%= will_paginate %>
+  <table class="table table-condensed table-hover" id="table-users">
+    <thead class="thead-dark">
+      <tr><%= link_to "追加", new_basis_path, class: "btn btn-primary" %></tr>
+    </thead>
+  </table>
+</div>
+<!--モーダルウインドウ表示-->
+<div id="edit-basic-info" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>

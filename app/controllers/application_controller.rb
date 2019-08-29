@@ -16,6 +16,11 @@ class ApplicationController < ActionController::Base
     @user = User.find(params[:user_id])
   end
 
+  # paramsハッシュから拠点情報を取得
+  def set_base
+    @base = Base.find(params[:id])
+  end
+
   # ログイン済みのユーザーか確認します。
   def logged_in_user
     unless logged_in?

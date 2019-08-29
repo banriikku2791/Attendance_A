@@ -20,3 +20,8 @@ User.create!(name: "管理者",
                affiliation: affiliation,
                superior: false)
 end
+
+Base.create!(base_number: 1,
+             base_name: "拠点A",
+             work_bunrui: "1")
+

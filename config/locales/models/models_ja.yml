@@ -3,6 +3,7 @@ ja:
     models:
       user: ユーザー
       attendance: 勤怠
+      base: 拠点
     attributes:
         user:
           id: ID
@@ -31,3 +32,7 @@ ja:
           reason: 業務処理内容
           end_request: 残業申請状態区分
           change_request: 勤務変更申請状態区分
+        base:
+          base_number: 拠点番号
+          base_name: 拠点名
+          work_bunrui: 勤怠種類
