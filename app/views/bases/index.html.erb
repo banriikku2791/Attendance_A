@@ -5,7 +5,7 @@
 <h1><%= yield(:title) %></h1>
 <div class="col-md-10 col-md-offset-1">
   <%= will_paginate %>
-  <table class="table table-condensed table-hover table-bordered table-striped" id="table-users">
+  <table class="table table-condensed table-hover table-bordered table-striped" id="table-bases">
     <thead class="thead-inverse">
       <tr>
         <th></th>
@@ -19,7 +19,7 @@
     <% @bases.each do |base| %>
       <tr>
         <td class="center">
-          <%= link_to "修正", edit_basis_path(base), class: "btn btn-primary" %>
+          <%= link_to "修正", edit_basis_path(base), remote: true, class: "btn btn-primary" %>
         </td>
         <td class="center">
           <%= link_to "削除", basis_path(base), method: :delete,
@@ -33,11 +33,12 @@
     </tbody>
   </table>
   <%= will_paginate %>
-  <table class="table table-condensed table-hover" id="table-users">
+  <table class="table table-condensed table-hover" id="table-bases">
     <thead class="thead-dark">
-      <tr><%= link_to "追加", new_basis_path, class: "btn btn-primary" %></tr>
+      <tr><%= link_to "拠点情報追加", new_basis_path, remote: true, class: "btn btn-primary" %></tr>
     </thead>
   </table>
 </div>
 <!--モーダルウインドウ表示-->
-<div id="edit-basic-info" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>
+<div id="new" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>
+<div id="edit" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>

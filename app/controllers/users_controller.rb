@@ -8,12 +8,15 @@ class UsersController < ApplicationController
   before_action :set_one_month_or_week, only: :show
 
   def index
-    @user_key = ""
-    if params[:keyword].nil? 
+    if params[:key] == "1"
       @users = User.paginate(page: params[:page])
-    else
-      @users = User.paginate(page: params[:page]).search(params[:keyword])
-      @user_key = params[:keyword]
+    elsif params[:key] == "2"
+    #  user_kinmu = Attendance.joins(:users)
+    #                        .where.not(started_at: nil)
+    #                         .select("users.id AS user_id, users.name AS user_name, users.employee_number AS user_number")
+    #user_kinmu = Users.all
+      user_kinmu = User.where(id: Attendance.where.not(started_at: nil).where(worked_on: Date.current).select(:user_id))
+      @users = user_kinmu.paginate(page: params[:page])
     end
   end
 

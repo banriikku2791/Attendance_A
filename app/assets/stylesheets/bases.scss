@@ -1,3 +1,22 @@
 // Place all the styles related to the Bases controller here.
 // They will automatically be included in application.css.
 // You can use Sass (SCSS) here: http://sass-lang.com/
+
+/* 基本情報編集モーダルウインドウ */
+
+.label-base-new {
+  margin-top: 5px;
+}
+
+.btn-base-new {
+  margin: 15px 0;
+  width: 30%;
+}
+
+/* 拠点一覧ページ */
+
+#table-bases {
+  td {
+    vertical-align: middle;
+  }  
+}
