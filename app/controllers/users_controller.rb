@@ -5,7 +5,8 @@ class UsersController < ApplicationController
   before_action :correct_user, only: [:edit, :update]
   before_action :admin_or_correct_user, only: [:show, :index]
   before_action :admin_user, only: [:destroy, :edit_basic_info, :update_basic_info, :edit_basic_all, :update_basic_all]
-  before_action :set_one_month_or_week, only: :show
+  before_action :set_one_month_or_week, only: [:show]
+  before_action :set_one_month_or_week_2, only: [:show_readonly]
 
   def index
     if params[:key] == "1"
@@ -21,6 +22,13 @@ class UsersController < ApplicationController
   end
 
   def show
+    @worked_sum = @attendances_m.where.not(started_at: nil).count
+    @end_info_cnt = AttendanceEnd.where(superior_employee_number: @user.employee_number).count
+    @change_info_cnt = AttendanceChange.where(superior_employee_number: @user.employee_number).count
+    @fix_info_cnt = AttendanceFix.where(superior_employee_number: @user.employee_number).count
+  end
+
+  def show_readonly
     @worked_sum = @attendances_m.where.not(started_at: nil).count
   end
 

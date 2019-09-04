@@ -6,6 +6,7 @@ User.create!(name: "管理者",
              password_confirmation: "password",
              admin: true,
              affiliation: "情報システム部",
+             employee_number: 0,
              superior: false)
 
 60.times do |n|
@@ -13,11 +14,13 @@ User.create!(name: "管理者",
   email = "sample-#{n+1}@email.com"
   password = "password"
   affiliation = "開発部"
+  employee_number = n+1000
   User.create!(name: name,
                email: email,
                password: password,
                password_confirmation: password,
                affiliation: affiliation,
+               employee_number: employee_number,
                superior: false)
 end
 

@@ -1,12 +1,10 @@
 <% provide(:title, @user.name) %>
+<% provide(:class_text, 'base-new') %>
 <div>
   <table class="table table-bordered table-condensed", id="user-table">
     <tr>
       <td>
-        <%= link_to "初期表示", user_path, class: "btn btn-sm btn-primary" %>
-        <%= link_to "←", user_path(date: @first_day.prev_month, chenge_mw: "m"), class: "btn btn-sm btn-primary" %>
         　<%= l(@first_day, format: :middle) %>　時間管理表　
-        <%= link_to "→", user_path(date: @first_day.next_month, chenge_mw: "m"), class: "btn btn-sm btn-primary" %>
       </td>
       <td>指定勤務開始時間　<%= format_basic_info(@user.work_time) %><br>指定勤務終了時間　<%= format_basic_info(@user.work_time) %></td>
       <td colspan="3">基本時間　<%= format_basic_info(@user.basic_time) %></td>
@@ -22,25 +20,11 @@
     </tr>
   </table>
 </div>
-<div class="btn-users-show2">
-  <%= link_to "【所属長承認申請のお知らせ】", "#" %><br>
-  <%= link_to "【勤怠変更申請のお知らせ】", "#" %><br>
-  <% if @end_info_cnt == 0 %>
-    <%= link_to "【残業申請のお知らせ】", "#" %>
-  <% else %>
-    <strong><%= link_to "【残業申請のお知らせ】" + @end_info_cnt.to_s + "件の通知があります。", edit_end_ck_attendance_path(@user), remote: true, :style=>"color:red;" %></strong>
-  <% end %>
-</div>
-<div class="btn-users-show">
-  <%= link_to "勤怠を編集", attendances_edit_one_month_user_path(date: @first_day, chenge_mw: @select_area), class: "btn btn-primary" %>
-  <%= link_to "CSV出力", "#", class: "btn btn-primary" %>
-  <%= link_to "勤怠修正ログ（承認済）", "#", class: "btn btn-primary" %>
-</div>
+
 <div>
   <table class="table table-bordered table-condensed table-hover table-striped" id="table-attendances">
     <thead>
       <tr>
-        <td rowspan="3">残業申請</td>
         <td rowspan="3">日付</td>
         <td rowspan="3">曜日</td>
         <td colspan="8">【実績】</td>
@@ -70,9 +54,6 @@
     <tbody>
       <% @attendances.each do |day| %>
         <tr>
-          <td>
-            <%= link_to "残業申請", edit_over_work_attendance_path(day), remote: true, class: "btn btn-primary btn-attendance btn-sm" %>
-          </td>
           <td><%= l(day.worked_on, format: :short) %></td>
           <% if day.worked_on.wday == 0 %>
             <td class="txt-youbi-sun">
@@ -85,16 +66,10 @@
           <td><%= l(day.started_at, format: :time_h) if day.started_at.present? %></td>
           <td><%= working_minutes(day.started_at) if day.started_at.present? %></td>
           <td>
-            <% if (btn_text = attendance_state(day)) && day.started_at.nil? %>
-              <%= link_to "#{btn_text}", user_attendance_path(@user, day), method: :patch, class: "btn btn-primary btn-attendance btn-sm" %>
-            <% end %>
           </td>
           <td><%= l(day.finished_at, format: :time_h) if day.finished_at.present? %></td>
           <td><%= working_minutes(day.finished_at) if day.finished_at.present? %></td>
           <td>
-            <% if (btn_text = attendance_state(day)) && day.started_at.present? && day.finished_at.nil? %>
-              <%= link_to "#{btn_text}", user_attendance_path(@user, day), method: :patch, class: "btn btn-primary btn-attendancev btn-sm" %>
-            <% end %>
           </td>
           <td>
             <% if day.started_at.present? && day.finished_at.present? %>
@@ -124,7 +99,6 @@
         <td colspan="1"></td>
         <td colspan="1"></td>
         <td colspan="1"></td>
-        <td colspan="1"></td>
         <td colspan="1">
           所属長承認　<%= "未" %><br>
           <select name="example">
@@ -133,19 +107,13 @@
             <option value="上長B">上長B</option>
             <option value="上長C">上長C</option>
           </select><br>
-          <%= link_to "申請", "#", class: "btn btn-primary btn-attendance btn-sm" %>
         </td>
       </tr>
     </tfoot>    
   </table>
+  <div class="center">
+    <button type="button" class="btn btn-default btn-<%= yield(:class_text) %>" data-dismiss="modal">
+      キャンセル
+    </button>
+  </div>
 </div>
-<!--モーダルウインドウ表示-->
-<div id="edit_over_work" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>
-<div id="edit_end_ck" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>
-<!--ファイルアップロード用スクリプト-->
-<script type="text/javascript">
-  function file_selected(file_field){
-    var filename = $(file_field)[0].files[0].name;
-    $("#filename").val(filename);
-  }
-</script>

@@ -22,8 +22,18 @@ Rails.application.routes.draw do
       patch 'update_basic_all'
       get 'edit_all'
       patch 'update_all'
+      get 'show_readonly'
     end
     resources :attendances, only: :update
+  end
+
+  resources :attendances do
+    member do
+      get 'edit_over_work'
+      patch 'update_over_work'
+      get 'edit_end_ck'
+      patch 'update_end_ck'
+    end
   end
 
   resources :bases do

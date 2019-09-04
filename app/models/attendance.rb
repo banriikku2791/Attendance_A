@@ -22,7 +22,7 @@ class Attendance < ApplicationRecord
 
   def started_at_is_invalid_without_a_finished_at
     #debugger
-    if Date.today != worked_on
+    if Date.current != worked_on
       errors.add(:finished_at ,"が未入力で出勤日が入力の場合、編集日が過去の場合入力が必要です") if finished_at.blank? && started_at.present?
     end
   end

@@ -16,7 +16,9 @@
         </tr>
       </thead>
       <tbody>
+        <% @cnt = 0 %>
         <% @attendances.each do |day| %>
+          <% @cnt += 1 %>
           <%= f.fields_for "attendances[]", day do |attendance| %>
             <tr>
               <td><%= l(day.worked_on, format: :short) %></td>
@@ -35,7 +37,7 @@
                 <td><%= attendance.time_field :started_at, class: "form-control" %></td>
                 <td><%= attendance.time_field :finished_at, class: "form-control" %></td>
               <% end %>
-              <td></td>
+              <td><%= f.check_box :ck_tommorow, id: "ck_tommorow_"+ @cnt.to_s %></td>
               <td>
                 <% if day.started_at.present? && day.finished_at.present? %>
                   <%= working_times(day.started_at, day.finished_at) %>
@@ -45,21 +47,12 @@
                 <td><%= attendance.text_field :note, readonly: true, class: "form-control" %></td>
                 <td>
                   <select name="example" disabled class="background:#fff;">
-                    <option value="上長0">プログラム化</option>
-                    <option value="上長A">上長A</option>
-                    <option value="上長B">上長B</option>
-                    <option value="上長C">上長C</option>
+                    <option value="上長0">-----</option>
                   </select>
                 </td>
               <% else %>
-                <td><%= attendance.text_field :note, class: "form-control" %></td>
-                <td>
-                  <select name="example">
-                    <option value="上長0">プログラム化</option>
-                    <option value="上長A">上長A</option>
-                    <option value="上長B">上長B</option>
-                    <option value="上長C">上長C</option>
-                  </select>
+                <td><%= attendance.text_field :reason, class: "form-control" %></td>
+                <td><%= select_tag 'employee_number_'+ @cnt.to_s , options_for_select(@user_superior,1), include_blank: true %>
                 </td>
               <% end %>
             </tr>
