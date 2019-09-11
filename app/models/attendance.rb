@@ -1,6 +1,10 @@
 class Attendance < ApplicationRecord
   belongs_to :user
+  has_many :attendance_changes, dependent: :destroy
+  has_many :attendance_ends, dependent: :destroy
 
+  #attr_accessor :ck_tommorow
+  attr_accessor :employee_number
   validates :worked_on, presence: true
 
   # 出勤時間が存在しない場合、退勤時間は無効

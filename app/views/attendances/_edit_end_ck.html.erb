@@ -7,8 +7,9 @@
         <span aria-hidden="true">&times;</span>
       </button>
     </div>
-    <%= form_with(model: @attendance_end, url: update_end_ck_attendance_path(@attendance_end), local: true, method: :patch) do |f| %>
+    <%= form_with(model: @user, url: attendances_update_end_ck_user_path(@user), local: true, method: :patch) do |f| %>
       <% @user_end.each do |ue| %>
+
         <% @user = User.find(ue.user_id) %>
         <h1 class="modal-title"><%= "【" + @user.name + " からの残業申請】" %></h1>
         <div class="modal-body">
@@ -30,25 +31,29 @@
                 </thead>
                 <tbody>
                   <% @attendance_end.each do |ae| %>
-                    <% if ue.user_id == ae.user_id %>
-                      <tr>
-                        <td><%= l(ae.worked_on, format: :short) %></td>
-                        <% if ae.worked_on.wday == 0 %>
-                          <td class="txt-youbi-sun">
-                        <% elsif ae.worked_on.wday == 6 %>
-                          <td class="txt-youbi-sat">
-                        <% else %>
-                          <td>
-                        <% end %>
-                        <%= $days_of_the_week[ae.worked_on.wday] %></td>
-                        <td><%= format_basic_info(ae.end_at) %></td>
-                        <td><%= format_basic_info(@user.designated_work_end_time) %></td>
-                        <td></td>
-                        <td><%= ae.reason %></td>
-                        <td><%= f.select :sec_request ,options_for_select(@req_sec,1) %></td>
-                        <td><%= f.check_box :ck_change %></td>
-                        <td><%= link_to "確認", show_readonly_user_path(user_id: @user.id), class: "btn btn-primary btn-attendance btn-sm" %></td>
-                      </tr>
+                  
+                    <%= f.fields_for "attendance_ends[]", ae do |a_end| %>
+                    
+                      <% if ue.user_id == ae.user_id %>
+                        <tr>
+                          <td><%= l(ae.worked_on, format: :short) %></td>
+                          <% if ae.worked_on.wday == 0 %>
+                            <td class="txt-youbi-sun">
+                          <% elsif ae.worked_on.wday == 6 %>
+                            <td class="txt-youbi-sat">
+                          <% else %>
+                            <td>
+                          <% end %>
+                          <%= $days_of_the_week[ae.worked_on.wday] %></td>
+                          <td><%= ae.end_at.slice(0..1) + " : "+ ae.end_at.slice(2..3) if ae.end_at.present? %></td>
+                          <td><%= @user.designated_work_end_time.slice(0..1) + " : "+ @user.designated_work_end_time.slice(2..3) %></td>
+                          <td><%= working_overtimes(ae.end_at, @user.designated_work_end_time, ae.tomorrow_flg) %></td>
+                          <td><%= ae.reason %></td>
+                          <td><%= a_end.select :request ,options_for_select(@req_sec,1) %></td>
+                          <td><%= a_end.check_box 'ck_change' %></td>
+                          <td><%= link_to "確認", show_readonly_user_path(user_id: @user.id, gamen: "end"), class: "btn btn-primary btn-attendance btn-sm" %></td>
+                        </tr>
+                      <% end %>
                     <% end %>
                   <% end %>
                 </tbody>
@@ -60,9 +65,7 @@
       <div class="modal-footer">
         <div class="center">
           <%= f.submit yield(:button_text), class: "btn btn-primary btn-#{yield(:class_text)}" %>
-          <button type="button" class="btn btn-default btn-<%= yield(:class_text) %>" data-dismiss="modal">
-            キャンセル
-          </button>
+          <%= link_to "閉じる", current_user, class: "btn btn-primary btn-#{yield(:class_text)}" %>
         </div>
       </div>
     <% end %>

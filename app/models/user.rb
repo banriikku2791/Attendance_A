@@ -3,7 +3,10 @@ class User < ApplicationRecord
   has_many :attendance_changes, dependent: :destroy
   has_many :attendance_ends, dependent: :destroy
   has_many :attendance_fixs, dependent: :destroy
-
+  
+  #accepts_nested_attributes_for :attendance_ends
+  # accepts_nested_attributes_for :attendance_ends, ck_change: 0
+  
   # 「remember_token」という仮想の属性を作成します。
   attr_accessor :remember_token
   before_save { self.email = email.downcase }

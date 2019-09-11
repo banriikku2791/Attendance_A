@@ -10,4 +10,21 @@ module UsersHelper
     return format("%.2f", total_m)
   end
 
+  def ck_fix_hantei
+    puts "ck----------------------------hantei"
+    puts @cnt_fix
+    puts @req_fix
+    puts @name_fix
+    
+    if @cnt_fix != 0 && @req_fix == "1"
+      return @name_fix + "へ申請中"
+    elsif @cnt_fix != 0 && @req_fix == "2"
+      return "承認済"
+    elsif @cnt_fix != 0 && @req_fix == "3"
+      return "否認"
+    else
+      return "未"
+    end
+  end
+
 end

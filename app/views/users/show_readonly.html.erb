@@ -78,8 +78,8 @@
             <% end %>
           </td>
           <td><%= day.note %></td>
-          <td><%= l(day.end_at, format: :time_h) if day.end_at.present? %></td>
-          <td><%= working_minutes(day.end_at) if day.end_at.present? %></td>
+          <td><%= day.end_at.slice(0..1) if day.end_at.present? %></td>
+          <td><%= day.end_at.slice(2..3) if day.end_at.present? %></td>
           <td></td>
           <td><%= day.reason %></td>
           <td></td>
@@ -112,8 +112,20 @@
     </tfoot>    
   </table>
   <div class="center">
-    <button type="button" class="btn btn-default btn-<%= yield(:class_text) %>" data-dismiss="modal">
-      キャンセル
-    </button>
+    <% if params[:gamen] == "change" %>
+      <%= link_to "戻る" , attendances_edit_change_ck_user_path(@user), remote: true, class: "btn btn-primary btn-attendance" %>
+    <% elsif params[:gamen] == "end" %>
+      <%= link_to "戻る" , attendances_edit_end_ck_user_path(@user), remote: true, class: "btn btn-primary btn-attendance" %>
+    <% elsif params[:gamen] == "fix" %>
+      <%= link_to "戻る" , attendances_edit_fix_ck_user_path(@user), remote: true, class: "btn btn-primary btn-attendance" %>
+    <% else %>
+      <button type="button" class="btn btn-default btn-<%= yield(:class_text) %>" data-dismiss="modal">
+        戻る
+      </button>
+    <% end %>
   </div>
 </div>
+<!--モーダルウインドウ表示-->
+<div id="edit_end_ck" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>
+<div id="edit_change_ck" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>
+<div id="edit_fix_ck" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>

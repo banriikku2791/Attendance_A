@@ -1,0 +1,56 @@
+<% provide(:class_text, 'base-new') %>
+<% provide(:button_text, '変更を送信する') %>
+<div class="modal-dialog modal-lg modal-dialog-center">
+  <div class="modal-content">
+    <div class="modal-header">
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+    <%= form_with(model: @user, url: attendances_update_fix_ck_user_path(@user), local: true, method: :patch) do |f| %>
+      <% @user_fix.each do |uf| %>
+
+        <% @user = User.find(uf.user_id) %>
+        <h1 class="modal-title"><%= "【" + @user.name + " からの１ヵ月分の勤怠申請】" %></h1>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-10 col-md-offset-1">
+              <table class="table table-bordered table-condensed table-hover table-striped" id="table-attendances">
+                <thead>
+                  <tr>
+                    <th>月</th>
+                    <th>指示者確認㊞</th>
+                    <th>変更</th>
+                    <th>勤怠を確認する</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% @attendance_fix.each do |af| %>
+                  
+                    <%= f.fields_for "attendance_fixs[]", af do |a_fix| %>
+                    
+                      <% if uf.user_id == af.user_id %>
+                        <tr>
+                          <td><%= af.worked_on.month.to_s + "月" %></td>
+                          <td><%= a_fix.select :request ,options_for_select(@req_sec,1) %></td>
+                          <td><%= a_fix.check_box 'ck_change' %></td>
+                          <td><%= link_to "確認", show_readonly_user_path(user_id: @user.id, gamen: "fix"), class: "btn btn-primary btn-attendance btn-sm" %></td>
+                        </tr>
+                      <% end %>
+                    <% end %>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      <% end %>
+      <div class="modal-footer">
+        <div class="center">
+          <%= f.submit yield(:button_text), class: "btn btn-primary btn-#{yield(:class_text)}" %>
+          <%= link_to "閉じる", current_user, class: "btn btn-primary btn-#{yield(:class_text)}" %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

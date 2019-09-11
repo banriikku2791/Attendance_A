@@ -12,8 +12,9 @@ module AttendancesHelper
 
   # 出勤時間と退勤時間を受け取り、在社時間を計算して返します。
   def working_times(start, finish)
-    #debugger
+
     w_times = (((finish - start) / 60) / 60.0) - ((finish - start) / 60).div(60)
+    
     if w_times >= 0 && w_times < 0.25
       format("%.2f", ((((finish - start) / 60).div(60))))
     elsif w_times >= 0.25 && w_times < 0.50
@@ -23,7 +24,31 @@ module AttendancesHelper
     else
       format("%.2f", ((((finish - start) / 60).div(60))) + 0.75)
     end   
-    #format("%.2f", (((finish - start) / 60) / 60.0))
+
+  end
+
+  # 終了予定時間と指定終了勤務時間を受け取り、時間外時間を計算して返します。
+  def working_overtimes(yotei, base, tflg)
+    # require "date"
+    dt = Time.current
+    str_b = dt.year.to_s + format('%02d', dt.month) + format('%02d', dt.day) + base + "00" 
+    dt += 86400 if tflg
+    str_y = dt.year.to_s + format('%02d', dt.month) + format('%02d', dt.day) + yotei + "00"
+    start = Time.parse(str_b)
+    finish = Time.parse(str_y)
+    w_times_sa = finish - start
+    w_times = (((w_times_sa) / 60) / 60.0) - ((w_times_sa) / 60).div(60)
+
+    if w_times >= 0 && w_times < 0.25
+      format("%.2f", ((((w_times_sa) / 60).div(60))))
+    elsif w_times >= 0.25 && w_times < 0.50
+      format("%.2f", ((((w_times_sa) / 60).div(60))) + 0.25)
+    elsif w_times >= 0.50 && w_times < 0.75
+      format("%.2f", ((((w_times_sa) / 60).div(60))) + 0.5)
+    else
+      format("%.2f", ((((w_times_sa) / 60).div(60))) + 0.75)
+    end 
+
   end
   
   def working_minutes(target_min)

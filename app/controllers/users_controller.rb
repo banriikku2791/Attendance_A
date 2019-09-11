@@ -23,9 +23,15 @@ class UsersController < ApplicationController
 
   def show
     @worked_sum = @attendances_m.where.not(started_at: nil).count
-    @end_info_cnt = AttendanceEnd.where(superior_employee_number: @user.employee_number).count
-    @change_info_cnt = AttendanceChange.where(superior_employee_number: @user.employee_number).count
-    @fix_info_cnt = AttendanceFix.where(superior_employee_number: @user.employee_number).count
+    @end_info_cnt = AttendanceEnd.where(superior_employee_number: @user.employee_number, request: "1").count
+    @change_info_cnt = AttendanceChange.where(superior_employee_number: @user.employee_number, request: "1").count
+    @fix_info_cnt = AttendanceFix.where(superior_employee_number: @user.employee_number, request: "1").count
+    # 上長選択用編集処理
+    user_s = User.where(superior: true)
+    @user_superior = {}
+    user_s.each do |u|
+      @user_superior[u.name] = u.employee_number
+    end
   end
 
   def show_readonly

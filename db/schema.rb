@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20190827043059) do
+ActiveRecord::Schema.define(version: 20190911041327) do
 
   create_table "attendance_changes", force: :cascade do |t|
     t.date "worked_on"
@@ -26,12 +26,14 @@ ActiveRecord::Schema.define(version: 20190827043059) do
     t.integer "user_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "attendance_id"
+    t.index ["attendance_id"], name: "index_attendance_changes_on_attendance_id"
     t.index ["user_id"], name: "index_attendance_changes_on_user_id"
   end
 
   create_table "attendance_ends", force: :cascade do |t|
     t.date "worked_on"
-    t.datetime "end_at"
+    t.string "end_at"
     t.string "reason"
     t.integer "superior_employee_number"
     t.string "request"
@@ -40,6 +42,9 @@ ActiveRecord::Schema.define(version: 20190827043059) do
     t.integer "user_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "tomorrow_flg", default: false
+    t.integer "attendance_id"
+    t.index ["attendance_id"], name: "index_attendance_ends_on_attendance_id"
     t.index ["user_id"], name: "index_attendance_ends_on_user_id"
   end
 
@@ -63,10 +68,11 @@ ActiveRecord::Schema.define(version: 20190827043059) do
     t.integer "user_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.datetime "end_at"
+    t.string "end_at"
     t.string "reason"
     t.string "request_end"
     t.string "request_change"
+    t.string "ck_tomorrow", default: "0"
     t.index ["user_id"], name: "index_attendances_on_user_id"
   end
 
@@ -87,12 +93,12 @@ ActiveRecord::Schema.define(version: 20190827043059) do
     t.string "remember_digest"
     t.boolean "admin", default: false
     t.string "affiliation"
-    t.datetime "basic_time", default: "2019-09-03 23:00:00"
-    t.datetime "work_time", default: "2019-09-03 22:30:00"
+    t.datetime "basic_time", default: "2019-09-10 23:00:00"
+    t.datetime "work_time", default: "2019-09-10 22:30:00"
     t.boolean "superior", default: false
-    t.datetime "designated_work_start_time", default: "2019-09-04 00:00:00"
-    t.datetime "designated_work_end_time", default: "2019-09-04 09:00:00"
-    t.datetime "basic_work_time", default: "2019-09-03 23:00:00"
+    t.string "designated_work_start_time", default: "0800"
+    t.string "designated_work_end_time", default: "1700"
+    t.string "basic_work_time", default: "0800"
     t.integer "employee_number"
     t.string "uid"
     t.index ["email"], name: "index_users_on_email", unique: true

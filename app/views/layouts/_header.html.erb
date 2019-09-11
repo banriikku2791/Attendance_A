@@ -1,8 +1,14 @@
 <header class="navbar navbar-fixed-top navbar-inverse">
   <div class="container">
-    <%= link_to "勤怠システム", root_path, id: "logo" %>
+    <% if params[:gamen] == "change" || params[:gamen] == "end" %>
+      <%= link_to "勤怠システム", "#", id: "logo" %>
+    <% else %>
+      <%= link_to "勤怠システム", root_path, id: "logo" %>
+    <% end %>
     <nav>
       <ul class="nav navbar-nav navbar-right">
+      <% if params[:gamen] == "change" || params[:gamen] == "end" %>
+      <% else %>
         <% if logged_in? %>
           <li><%= link_to "トップへ", root_path %></li>
           <% if current_user.admin? %>
@@ -26,6 +32,7 @@
           <li><%= link_to "トップへ", root_path %></li>
           <li><%= link_to "ログイン", login_path %></li>
         <% end %>
+      <% end %>
       </ul>
     </nav>
   </div>

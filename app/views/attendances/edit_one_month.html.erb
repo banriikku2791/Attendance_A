@@ -33,27 +33,23 @@
               <% if Date.current < day.worked_on %>
                 <td><%= attendance.time_field :started_at, readonly: true, class: "form-control" %></td>
                 <td><%= attendance.time_field :finished_at, readonly: true, class: "form-control" %></td>
+                <td><%= attendance.check_box :ck_tomorrow, disabled: true %></td>
               <% else %>
                 <td><%= attendance.time_field :started_at, class: "form-control" %></td>
                 <td><%= attendance.time_field :finished_at, class: "form-control" %></td>
+                <td><%= attendance.check_box :ck_tomorrow %></td>
               <% end %>
-              <td><%= f.check_box :ck_tommorow, id: "ck_tommorow_"+ @cnt.to_s %></td>
               <td>
                 <% if day.started_at.present? && day.finished_at.present? %>
                   <%= working_times(day.started_at, day.finished_at) %>
                 <% end %>
               </td>
               <% if Date.current < day.worked_on %>
-                <td><%= attendance.text_field :note, readonly: true, class: "form-control" %></td>
-                <td>
-                  <select name="example" disabled class="background:#fff;">
-                    <option value="上長0">-----</option>
-                  </select>
-                </td>
+                <td><%= attendance.text_field :reason, readonly: true, class: "form-control" %></td>
+                <td><%= attendance.select :employee_number, {}, {}, :disabled => true %></td>
               <% else %>
                 <td><%= attendance.text_field :reason, class: "form-control" %></td>
-                <td><%= select_tag 'employee_number_'+ @cnt.to_s , options_for_select(@user_superior,1), include_blank: true %>
-                </td>
+                <td><%= attendance.select :employee_number, options_for_select(@user_superior,1), include_blank: true %></td>
               <% end %>
             </tr>
           <% end %>

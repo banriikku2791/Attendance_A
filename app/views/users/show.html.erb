@@ -1,4 +1,5 @@
 <% provide(:title, @user.name) %>
+<%= form_with(model: @user, url: user_attendances_path(user_id: @user.id ,m_day: @first_day), local: true, method: :post) do |f| %>
 <div>
   <table class="table table-bordered table-condensed", id="user-table">
     <tr>
@@ -23,12 +24,22 @@
   </table>
 </div>
 <div class="btn-users-show2">
-  <%= link_to "【所属長承認申請のお知らせ】", "#" %><br>
-  <%= link_to "【勤怠変更申請のお知らせ】", "#" %><br>
+  <% if @fix_info_cnt == 0 %>
+    <%= link_to "【所属長承認申請のお知らせ】", "#" %><br>
+  <% else %>
+    <strong><%= link_to "【所属長承認申請のお知らせ】" + @fix_info_cnt.to_s + "件の通知があります。", attendances_edit_fix_ck_user_path(@user), remote: true, :style=>"color:red;" %></strong><br>
+  <% end %>
+
+  <% if @change_info_cnt == 0 %>
+    <%= link_to "【勤怠変更申請のお知らせ】", "#" %><br>
+  <% else %>
+    <strong><%= link_to "【勤怠変更申請のお知らせ】" + @change_info_cnt.to_s + "件の通知があります。", attendances_edit_change_ck_user_path(@user), remote: true, :style=>"color:red;" %></strong><br>
+  <% end %>
+  
   <% if @end_info_cnt == 0 %>
     <%= link_to "【残業申請のお知らせ】", "#" %>
   <% else %>
-    <strong><%= link_to "【残業申請のお知らせ】" + @end_info_cnt.to_s + "件の通知があります。", edit_end_ck_attendance_path(@user), remote: true, :style=>"color:red;" %></strong>
+    <strong><%= link_to "【残業申請のお知らせ】" + @end_info_cnt.to_s + "件の通知があります。", attendances_edit_end_ck_user_path(@user), remote: true, :style=>"color:red;" %></strong>
   <% end %>
 </div>
 <div class="btn-users-show">
@@ -36,6 +47,7 @@
   <%= link_to "CSV出力", "#", class: "btn btn-primary" %>
   <%= link_to "勤怠修正ログ（承認済）", "#", class: "btn btn-primary" %>
 </div>
+
 <div>
   <table class="table table-bordered table-condensed table-hover table-striped" id="table-attendances">
     <thead>
@@ -93,7 +105,7 @@
           <td><%= working_minutes(day.finished_at) if day.finished_at.present? %></td>
           <td>
             <% if (btn_text = attendance_state(day)) && day.started_at.present? && day.finished_at.nil? %>
-              <%= link_to "#{btn_text}", user_attendance_path(@user, day), method: :patch, class: "btn btn-primary btn-attendancev btn-sm" %>
+              <%= link_to "#{btn_text}", user_attendance_path(@user, day), method: :patch, class: "btn btn-primary btn-attendance btn-sm" %>
             <% end %>
           </td>
           <td>
@@ -103,11 +115,35 @@
             <% end %>
           </td>
           <td><%= day.note %></td>
-          <td><%= l(day.end_at, format: :time_h) if day.end_at.present? %></td>
-          <td><%= working_minutes(day.end_at) if day.end_at.present? %></td>
+          <td><%= day.end_at.slice(0..1) if day.end_at.present? %></td>
+          <td><%= day.end_at.slice(2..3) if day.end_at.present? %></td>
           <td></td>
           <td><%= day.reason %></td>
-          <td></td>
+          <td>
+            <% output = "" %>
+            <% output1 = "" %>
+            <% output2 = "" %>
+            <% if day.request_end == "2" %>
+              <% output1 = "残業承認済" %>
+            <% elsif day.request_end == "3" %>
+              <% output1 = "残業否認" %>
+            <% end %>
+            <% if day.request_change == "2" %>
+              <% output2 = "勤怠編集承認済" %>
+            <% elsif day.request_change == "3" %>
+              <% output2 = "勤怠編集否認" %>
+            <% end %>
+            <% if output1.present?%>
+              <% if output2.present?%>
+                <% output = output1 + " " + output2 %>
+              <% else %>
+                <% output = output1 %>
+              <% end %>
+            <% elsif output2.present?%>
+              <% output = output2 %>
+            <% end %>
+            <%= output %>
+          </td>
         </tr>
       <% end %>
     </tbody>
@@ -125,27 +161,27 @@
         <td colspan="1"></td>
         <td colspan="1"></td>
         <td colspan="1"></td>
+        
         <td colspan="1">
-          所属長承認　<%= "未" %><br>
-          <select name="example">
-            <option value="上長0">プログラム化</option>
-            <option value="上長A">上長A</option>
-            <option value="上長B">上長B</option>
-            <option value="上長C">上長C</option>
-          </select><br>
-          <%= link_to "申請", "#", class: "btn btn-primary btn-attendance btn-sm" %>
+          所属長承認　<%= ck_fix_hantei %><br>
+          <%= f.select :employee_number, options_for_select(@user_superior,1), include_blank: true %><br>
+          <%= f.submit "申請", data: { confirm: "所属長承認申請してよろしいですか？" }, class: "btn btn-primary btn-attendance btn-sm" %>
         </td>
       </tr>
     </tfoot>    
   </table>
 </div>
+<% end %>
 <!--モーダルウインドウ表示-->
 <div id="edit_over_work" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>
 <div id="edit_end_ck" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>
+<div id="edit_change_ck" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>
+<div id="edit_fix_ck" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>
 <!--ファイルアップロード用スクリプト-->
 <script type="text/javascript">
   function file_selected(file_field){
     var filename = $(file_field)[0].files[0].name;
     $("#filename").val(filename);
   }
+  
 </script>
