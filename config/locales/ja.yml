@@ -43,6 +43,7 @@ ja:
       middle: "%Y年%m月"
       short: "%-m/%-d"
       short_0: "%m/%d"
+      ymd_s: "%Y%m"
     month_names:
     - 
     - 1月
@@ -203,7 +204,9 @@ ja:
     am: 午前
     formats:
       default: "%Y年%m月%d日(%a) %H時%M分%S秒 %z"
+      ymd_s: "%Y%m"
       long: "%Y/%m/%d %H:%M"
+      long_b: "%Y-%m-%d"
       short: "%m/%d %H:%M"
       time: "%H：%M"
       time_h: "%H"

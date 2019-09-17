@@ -1,0 +1,189 @@
+<% provide(:class_text, 'base-new') %>
+<% provide(:button_text, 'リセット') %>
+<div class="modal-dialog modal-lg modal-dialog-center">
+  <div class="modal-content">
+    <div class="modal-header">
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+    <%= form_with(model: @user, url: attendances_update_change_log_user_path(@user, date: @first_day, chenge_mw: @select_area), method: :patch) do |f| %>
+      <h1 class="modal-title"><%= "勤怠ログ" %></h1>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-2 col-md-offset-1">
+            <div>
+              <%= f.submit "リセット", class: "btn btn-primary btn-sm" %>
+            </div>
+            <table class="table table-bordered table-condensed">
+              <tr>
+                <td class="center">年</td>
+                <td><%= f.select 'sec_year' ,options_for_select(@log_y, @w_cnt_y) %></td>
+              </tr>
+              <tr>
+                <td class="center">月</td>
+                <td><%= f.select 'sec_month' ,options_for_select(@log_m, @w_cnt_m) %></td>
+              </tr>
+            </table>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-10 col-md-offset-1">
+            <table class="table table-bordered table-condensed table-hover table-striped" id="table-attendances">
+              <thead>
+                <tr>
+                  <td>日付</td>
+                  <td>変更前出社時間</td>
+                  <td>変更前帰社時間</td>
+                  <td>変更後出社時間</td>
+                  <td>変更後帰社時間</td>
+                  <td>指示者</td>
+                  <td>承認日</td>
+                </tr>
+              </thead>
+              <tbody>
+                <% hatei_flg = false%>
+                <% w_o_today = nil %>
+                <% w_n_today = nil %>
+                <% w_today = nil %>
+
+                <% w_o_b_start_day = nil %>
+                <% w_n_b_start_day = nil %>
+                <% w_o_a_start_day = nil %>
+                <% w_n_a_start_day = nil %>
+                <% w_b_start_day = nil %>
+                <% w_a_start_day = nil %>
+
+                <% w_o_b_finish_day = nil %>
+                <% w_n_b_finish_day = nil %>
+                <% w_o_a_finish_day = nil %>
+                <% w_n_a_finish_day = nil %>
+                <% w_b_finish_day = nil %>
+                <% w_a_finish_day = nil %>
+
+                <% w_o_superior_num = 0 %>
+                <% w_n_superior_num = 0 %>
+                <% w_superior_num = 0 %>
+
+                <% w_o_confirm_day = nil %>
+                <% w_n_confirm_day = nil %>
+                <% w_confirm_day = nil %>
+
+                <% w_cnt = 0 %>
+                
+                <% @attendance_change.each do |ac| %>
+                
+                  <% w_cnt += 1 %>
+                  <% puts "w_cnt:" + w_cnt.to_s %>
+                  
+                  <% w_n_today = ac.worked_on %>
+                  
+                  <% if w_cnt == 1 %>
+                    
+                    <% w_o_today = w_n_today %>
+                    
+                    <% w_today = w_n_today %>
+                    <% w_b_start_day = ac.before_started_at %>
+                    <% w_b_finish_day = ac.before_finished_at %>
+                    
+                    <% w_a_start_day = ac.after_started_at %>
+                    <% w_a_finish_day = ac.after_finished_at %>
+                    
+                    <% w_superior_num = ac.superior_employee_number %>
+                    <% w_confirm_day = ac.confirm_at %>
+
+                    <% w_o_b_start_day = w_b_start_day %>
+                    <% w_o_b_finish_day = w_b_finish_day %>
+                    
+                    <% w_o_a_start_day = w_a_start_day %>
+                    <% w_o_a_finish_day = w_a_finish_day %>
+                    
+                    <% w_o_superior_num = w_superior_num %>
+                    <% w_o_confirm_day = w_confirm_day %>
+
+                  <% else %>
+                  
+                    <% if w_o_today != w_n_today %>
+                      <% hatei_flg = true %>
+
+                      <% w_today = w_o_today %>
+                      <% w_b_start_day = w_o_b_start_day %>
+                      <% w_b_finish_day = w_o_b_finish_day %>
+                      <% w_a_start_day = w_o_a_start_day %>
+                      <% w_a_finish_day = w_o_a_finish_day %>
+                      <% w_superior_num = w_o_superior_num %>
+                      <% w_confirm_day = w_o_confirm_day %>
+
+                      <% w_o_b_start_day = ac.before_started_at %>
+                      <% w_o_b_finish_day = ac.before_finished_at %>
+                      <% w_o_a_start_day = ac.after_started_at %>
+                      <% w_o_a_finish_day = ac.after_finished_at %>
+                      <% w_o_superior_num = ac.superior_employee_number %>
+                      <% w_o_confirm_day = ac.confirm_at %>
+
+<% puts "１：通過した？ → " + w_cnt.to_s %>
+                    <% else %>
+                      
+                      <% w_o_a_start_day = ac.after_started_at %>
+                      <% w_o_a_finish_day = ac.after_finished_at %>
+                      <% w_o_superior_num = ac.superior_employee_number %>
+                      <% w_o_confirm_day = ac.confirm_at %>
+                      <% puts "２：通過した？ → " + w_cnt.to_s %>
+               
+                    <% end %>
+                  <% end %>
+
+                  <% if hatei_flg %>
+                    <tr>
+                      <td><%= w_today %></td>
+                      <td><%= l(w_b_start_day, format: :time_h) + ":" + working_minutes(w_b_start_day) if w_b_start_day.present? %></td>
+                      <td><%= l(w_b_finish_day, format: :time_h) + ":" + working_minutes(w_b_finish_day) if w_b_finish_day.present? %></td>
+                      <td><%= l(w_a_start_day, format: :time_h) + ":" + working_minutes(w_a_start_day) if w_a_start_day.present? %></td>
+                      <td><%= l(w_a_finish_day, format: :time_h) + ":" + working_minutes(w_a_finish_day) if w_a_finish_day.present? %></td>
+                      <% @user_superior = User.where(employee_number: w_superior_num) %>
+                      <% @user_superior.each do |us| %>
+                        <td><%= us.name %></td>
+                      <% end %>
+                      <td><%= l(w_confirm_day, format: :long_b) %></td>
+                    </tr>
+                    <% hatei_flg = false %>
+                  <% end %>
+
+                  <% if w_cnt == @attendance_change_cnt %>
+                    <% w_today = w_n_today %>
+                    <% w_b_start_day = w_o_b_start_day %>
+                    <% w_b_finish_day = w_o_b_finish_day %>
+                    <% w_a_start_day = w_o_a_start_day %>
+                    <% w_a_finish_day = w_o_a_finish_day %>
+                    <% w_superior_num = w_o_superior_num %>
+                    <% w_confirm_day = w_o_confirm_day %>
+                    <tr>
+                      <td><%= w_today %></td>
+                      <td><%= l(w_b_start_day, format: :time_h) + ":" + working_minutes(w_b_start_day) if w_b_start_day.present? %></td>
+                      <td><%= l(w_b_finish_day, format: :time_h) + ":" + working_minutes(w_b_finish_day) if w_b_finish_day.present? %></td>
+                      <td><%= l(w_a_start_day, format: :time_h) + ":" + working_minutes(w_a_start_day) if w_a_start_day.present? %></td>
+                      <td><%= l(w_a_finish_day, format: :time_h) + ":" + working_minutes(w_a_finish_day) if w_a_finish_day.present? %></td>
+                      <% @user_superior = User.where(employee_number: w_superior_num) %>
+                      <% @user_superior.each do |us| %>
+                        <td><%= us.name %></td>
+                      <% end %>
+                      <td><%= l(w_confirm_day, format: :long_b) %></td>
+                    </tr>
+                  <% end %>
+
+                  <% w_o_today = w_n_today %>
+
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    <% end %>
+    <div class="modal-footer">
+      <div class="center">
+        <%= link_to "閉じる", user_path(date: @first_day, chenge_mw: @select_area), class: "btn btn-primary btn-#{yield(:class_text)}" %>
+      </div>
+    </div>
+  </div>
+</div>

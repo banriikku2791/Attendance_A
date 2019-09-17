@@ -27,25 +27,25 @@
   <% if @fix_info_cnt == 0 %>
     <%= link_to "【所属長承認申請のお知らせ】", "#" %><br>
   <% else %>
-    <strong><%= link_to "【所属長承認申請のお知らせ】" + @fix_info_cnt.to_s + "件の通知があります。", attendances_edit_fix_ck_user_path(@user), remote: true, :style=>"color:red;" %></strong><br>
+    <strong><%= link_to "【所属長承認申請のお知らせ】" + @fix_info_cnt.to_s + "件の通知があります。", attendances_edit_fix_ck_user_path(@user, date: @first_day, chenge_mw: @select_area), remote: true, :style=>"color:red;" %></strong><br>
   <% end %>
 
   <% if @change_info_cnt == 0 %>
     <%= link_to "【勤怠変更申請のお知らせ】", "#" %><br>
   <% else %>
-    <strong><%= link_to "【勤怠変更申請のお知らせ】" + @change_info_cnt.to_s + "件の通知があります。", attendances_edit_change_ck_user_path(@user), remote: true, :style=>"color:red;" %></strong><br>
+    <strong><%= link_to "【勤怠変更申請のお知らせ】" + @change_info_cnt.to_s + "件の通知があります。", attendances_edit_change_ck_user_path(@user, date: @first_day, chenge_mw: @select_area), remote: true, :style=>"color:red;" %></strong><br>
   <% end %>
   
   <% if @end_info_cnt == 0 %>
     <%= link_to "【残業申請のお知らせ】", "#" %>
   <% else %>
-    <strong><%= link_to "【残業申請のお知らせ】" + @end_info_cnt.to_s + "件の通知があります。", attendances_edit_end_ck_user_path(@user), remote: true, :style=>"color:red;" %></strong>
+    <strong><%= link_to "【残業申請のお知らせ】" + @end_info_cnt.to_s + "件の通知があります。", attendances_edit_end_ck_user_path(@user, date: @first_day, chenge_mw: @select_area), remote: true, :style=>"color:red;" %></strong>
   <% end %>
 </div>
 <div class="btn-users-show">
   <%= link_to "勤怠を編集", attendances_edit_one_month_user_path(date: @first_day, chenge_mw: @select_area), class: "btn btn-primary" %>
-  <%= link_to "CSV出力", "#", class: "btn btn-primary" %>
-  <%= link_to "勤怠修正ログ（承認済）", "#", class: "btn btn-primary" %>
+  <%= link_to "CSV出力", export_path(format: :csv, id: @user.id, fday: @first_day_m, lday: @last_day_m) , class: "btn btn-primary" %>
+  <%= link_to "勤怠修正ログ（承認済）", attendances_edit_change_log_user_path(@user, select_day: @first_day, gamen: "s", chenge_mw: @select_area), remote: true, class: "btn btn-primary" %>
 </div>
 
 <div>
@@ -83,7 +83,7 @@
       <% @attendances.each do |day| %>
         <tr>
           <td>
-            <%= link_to "残業申請", edit_over_work_attendance_path(day), remote: true, class: "btn btn-primary btn-attendance btn-sm" %>
+            <%= link_to "残業申請", edit_over_work_attendance_path(day, date: @first_day, chenge_mw: @select_area), remote: true, class: "btn btn-primary btn-attendance btn-sm" %>
           </td>
           <td><%= l(day.worked_on, format: :short) %></td>
           <% if day.worked_on.wday == 0 %>
@@ -177,11 +177,11 @@
 <div id="edit_end_ck" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>
 <div id="edit_change_ck" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>
 <div id="edit_fix_ck" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>
+<div id="edit_change_log" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>
 <!--ファイルアップロード用スクリプト-->
 <script type="text/javascript">
   function file_selected(file_field){
     var filename = $(file_field)[0].files[0].name;
     $("#filename").val(filename);
   }
-  
 </script>

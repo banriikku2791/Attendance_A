@@ -1,0 +1,1 @@
+<%= collection_select :user, 'sec_month', AttendanceChange.where(deleted_flg: false, request: "2", user_id: id).group(:worked_on).order(:worked_on), :id, :worked_on %>

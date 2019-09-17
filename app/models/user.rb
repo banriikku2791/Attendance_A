@@ -7,6 +7,9 @@ class User < ApplicationRecord
   #accepts_nested_attributes_for :attendance_ends
   # accepts_nested_attributes_for :attendance_ends, ck_change: 0
   
+  attr_accessor :sec_year
+  attr_accessor :sec_month
+  
   # 「remember_token」という仮想の属性を作成します。
   attr_accessor :remember_token
   before_save { self.email = email.downcase }

@@ -176,5 +176,51 @@ puts "@name_fix:" + @name_fix
       return Time.zone.parse(str_d)
     end
   end
+  
+  # attendances_helperにもあるのを補正 exportで使用 controller側でコールできないため
+  def working_times_at(start, finish)
+    
+    unless start.nil? || finish.nil?
+
+      w_times = (((finish - start) / 60) / 60.0) - ((finish - start) / 60).div(60)
+      
+      if w_times >= 0 && w_times < 0.25
+        format("%.2f", ((((finish - start) / 60).div(60))))
+      elsif w_times >= 0.25 && w_times < 0.50
+        format("%.2f", ((((finish - start) / 60).div(60))) + 0.25)
+      elsif w_times >= 0.50 && w_times < 0.75
+        format("%.2f", ((((finish - start) / 60).div(60))) + 0.5)
+      else
+        format("%.2f", ((((finish - start) / 60).div(60))) + 0.75)
+      end
+    else
+      return nil
+    end
+
+  end
+  
+  def set_times_at(targetDay)
+    
+    setday = targetDay.nil? ?
+    targetDay : I18n.l(targetDay, format: :time_h) + ":" + working_minutes_at(targetDay)
+    
+    return setday
+
+  end
+
+  # attendances_helperにもあるのを補正 exportで使用 controller側でコールできないため
+  def working_minutes_at(target_min)
+    w_min = l(target_min, format: :time_m).to_i
+    if w_min >= 0 && w_min < 15
+      return "00"
+    elsif w_min >= 15 && w_min < 30
+      return "15"
+    elsif w_min >= 30 && w_min < 45
+      return "30"
+    else
+      return "45"
+    end
+  end
+
 
 end
