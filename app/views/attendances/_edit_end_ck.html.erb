@@ -1,8 +1,8 @@
-<% provide(:class_text, 'base-new') %>
+<% provide(:class_text, 'atten-modal') %>
 <% provide(:button_text, '変更を送信する') %>
 <div class="modal-dialog modal-lg modal-dialog-center">
   <div class="modal-content">
-    <div class="modal-header">
+    <div class="modal-header-custom">
       <button type="button" class="close" data-dismiss="modal" aria-label="Close">
         <span aria-hidden="true">&times;</span>
       </button>
@@ -45,13 +45,13 @@
                             <td>
                           <% end %>
                           <%= $days_of_the_week[ae.worked_on.wday] %></td>
-                          <td><%= ae.end_at.slice(0..1) + " : "+ ae.end_at.slice(2..3) if ae.end_at.present? %></td>
-                          <td><%= @user.designated_work_end_time.slice(0..1) + " : "+ @user.designated_work_end_time.slice(2..3) %></td>
+                          <td><%= ae.end_at.slice(0..1) + ":"+ ae.end_at.slice(2..3) if ae.end_at.present? %></td>
+                          <td><%= @user.designated_work_end_time %></td>
                           <td><%= working_overtimes(ae.end_at, @user.designated_work_end_time, ae.tomorrow_flg) %></td>
                           <td><%= ae.reason %></td>
                           <td><%= a_end.select :request ,options_for_select(@req_sec,1) %></td>
                           <td><%= a_end.check_box 'ck_change' %></td>
-                          <td><%= link_to "確認", show_readonly_user_path(user_id: @user.id, gamen: "end"), class: "btn btn-primary btn-attendance btn-sm" %></td>
+                          <td><%= link_to "確認", show_readonly_user_path(user_id: @user.id, gamen: "end", date: ae.worked_on, chenge_mw: "m"), class: "btn btn-primary btn-attendance btn-sm" %></td>
                         </tr>
                       <% end %>
                     <% end %>
@@ -62,7 +62,7 @@
           </div>
         </div>
       <% end %>
-      <div class="modal-footer">
+      <div class="modal-footer-custom">
         <div class="center">
           <%= f.submit yield(:button_text), class: "btn btn-primary btn-#{yield(:class_text)}" %>
           <%= link_to "閉じる", current_user, class: "btn btn-primary btn-#{yield(:class_text)}" %>

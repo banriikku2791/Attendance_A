@@ -23,31 +23,66 @@
     </tr>
   </table>
 </div>
+<!--お知らせ表示-->
 <div class="btn-users-show2">
-  <% if @fix_info_cnt == 0 %>
-    <%= link_to "【所属長承認申請のお知らせ】", "#" %><br>
-  <% else %>
-    <strong><%= link_to "【所属長承認申請のお知らせ】" + @fix_info_cnt.to_s + "件の通知があります。", attendances_edit_fix_ck_user_path(@user, date: @first_day, chenge_mw: @select_area), remote: true, :style=>"color:red;" %></strong><br>
-  <% end %>
-
-  <% if @change_info_cnt == 0 %>
-    <%= link_to "【勤怠変更申請のお知らせ】", "#" %><br>
-  <% else %>
-    <strong><%= link_to "【勤怠変更申請のお知らせ】" + @change_info_cnt.to_s + "件の通知があります。", attendances_edit_change_ck_user_path(@user, date: @first_day, chenge_mw: @select_area), remote: true, :style=>"color:red;" %></strong><br>
-  <% end %>
-  
-  <% if @end_info_cnt == 0 %>
-    <%= link_to "【残業申請のお知らせ】", "#" %>
-  <% else %>
-    <strong><%= link_to "【残業申請のお知らせ】" + @end_info_cnt.to_s + "件の通知があります。", attendances_edit_end_ck_user_path(@user, date: @first_day, chenge_mw: @select_area), remote: true, :style=>"color:red;" %></strong>
+  <% (1..3).each do |n| %>
+    <% if @info_cnt_0[n] == 0 %>
+      <% if @info_cnt_1[n] != 0 && @info_cnt_3[n] != 0 %>
+        <strong><%= info_cnt_title(1,n) %></strong>
+        <font color="red"><%= @info_cnt_1[n].to_s + info_cnt_title(2,4) + @info_cnt_3[n].to_s + info_cnt_title(2,3) %></font>
+      <% elsif @info_cnt_1[n] != 0 || @info_cnt_3[n] != 0 %>
+        <strong><%= info_cnt_title(1,n) %></strong>
+        <% if @info_cnt_1[n] != 0 %>
+          <font color="red"><%= @info_cnt_1[n].to_s + info_cnt_title(2,2) %></font>
+        <% end %>
+        <% if @info_cnt_3[n] != 0 %>
+          <font color="red"><%= @info_cnt_3[n].to_s + info_cnt_title(2,3) %></font>
+        <% end %>  
+      <% else %>
+        <font color="blue"><%= info_cnt_title(1,n) %></font>
+      <% end %>
+    <% else %>
+      <strong><%= info_cnt_title(1,n) %></strong>
+      <% if n == 1 %>
+        <%= link_to @info_cnt_0[n].to_s + info_cnt_title(2,1), 
+            attendances_edit_fix_ck_user_path(@user, date: @first_day, chenge_mw: @select_area), 
+            remote: true, class: "btn btn-sm btn-primary" %>
+      <% elsif n == 2 %>
+        <%= link_to @info_cnt_0[n].to_s + info_cnt_title(2,1), 
+            attendances_edit_change_ck_user_path(@user, date: @first_day, chenge_mw: @select_area), 
+            remote: true, class: "btn btn-sm btn-primary" %>
+      <% elsif n == 3 %>
+        <%= link_to @info_cnt_0[n].to_s + info_cnt_title(2,1), 
+            attendances_edit_end_ck_user_path(@user, date: @first_day, chenge_mw: @select_area), 
+            remote: true, class: "btn btn-sm btn-primary" %>
+      <% end %>
+      <% if @info_cnt_1[n] != 0 && @info_cnt_3[n] != 0 %>
+        <font color="red"><%= @info_cnt_1[n].to_s + info_cnt_title(2,4) + @info_cnt_3[n].to_s + info_cnt_title(2,3) %></font>
+      <% else %>
+        <% if @info_cnt_1[n] != 0 %>
+          <font color="red"><%= @info_cnt_1[n].to_s + info_cnt_title(2,2) %></font>
+        <% end %>
+        <% if @info_cnt_3[n] != 0 %>
+          <font color="red"><%= @info_cnt_3[n].to_s + info_cnt_title(2,3) %></font>
+        <% end %>  
+      <% end %>
+    <% end %>
+    <br>
   <% end %>
 </div>
+<!--各種ボタン-->
 <div class="btn-users-show">
-  <%= link_to "勤怠を編集", attendances_edit_one_month_user_path(date: @first_day, chenge_mw: @select_area), class: "btn btn-primary" %>
+  <% if @cnt_fix == 0 %>
+    <% if Date.current.beginning_of_month >= @first_day_m %>
+      <%= link_to "勤怠を編集", attendances_edit_one_month_user_path(date: @first_day, chenge_mw: @select_area), class: "btn btn-primary" %>  
+    <% else %>
+      <button type="button" class="btn btn-primary" disabled>勤怠を編集</button>
+    <% end %>
+  <% end %>
   <%= link_to "CSV出力", export_path(format: :csv, id: @user.id, fday: @first_day_m, lday: @last_day_m) , class: "btn btn-primary" %>
-  <%= link_to "勤怠修正ログ（承認済）", attendances_edit_change_log_user_path(@user, select_day: @first_day, gamen: "s", chenge_mw: @select_area), remote: true, class: "btn btn-primary" %>
+  <%= link_to "勤怠修正ログ（承認済）", attendances_edit_change_log_user_path(@user, select_day: @first_day, gamen: "m", chenge_mw: @select_area), remote: true, class: "btn btn-primary" %>
 </div>
-
+<!--一覧表示-->
 <div>
   <table class="table table-bordered table-condensed table-hover table-striped" id="table-attendances">
     <thead>
@@ -81,9 +116,33 @@
     </thead>
     <tbody>
       <% @attendances.each do |day| %>
+      <% @employee_cnum = 0 %>
+      <% @atten_cnum = AttendanceChange.where(attendance_id: day.id).select(:superior_employee_number) %>
+
+      <% @atten_cnum.each do |cnum| %>
+      <% @employee_cnum = cnum.superior_employee_number %>
+      <% end %>
+      <% puts @employee_cnum %>
+      <% if @employee_cnum != 0 %>
+        <% @atten_name = User.where(employee_number: @employee_cnum).select(:name) %>
+        <% @atten_name.each do |cname| %>
+          <% @employee_name = cname.name %>
+          <% puts @employee_name %>
+        <% end %>
+      <% end %>
         <tr>
           <td>
-            <%= link_to "残業申請", edit_over_work_attendance_path(day, date: @first_day, chenge_mw: @select_area), remote: true, class: "btn btn-primary btn-attendance btn-sm" %>
+            <% if Date.current >= day.worked_on %>
+              <% if day.started_at.nil? %>
+                <button type="button" class="btn btn-primary btn-attendance btn-sm" disabled>残業申請</button><!-- 開始日が設定されていない箇所は非活性 -->
+              <% elsif day.request_end == "1" %>
+                <button type="button" class="btn btn-primary btn-attendance btn-sm" disabled>残業申請</button><!-- 申請中は非活性 -->
+              <% else %>
+                <%= link_to "残業申請", edit_over_work_attendance_path(day, date: @first_day, chenge_mw: @select_area), remote: true, class: "btn btn-primary btn-attendance btn-sm" %>
+              <% end %>
+            <% else %>
+              <button type="button" class="btn btn-primary btn-attendance btn-sm" disabled>残業申請</button><!-- 申請日が本日以降は非活性 -->
+            <% end %>
           </td>
           <td><%= l(day.worked_on, format: :short) %></td>
           <% if day.worked_on.wday == 0 %>
@@ -117,39 +176,18 @@
           <td><%= day.note %></td>
           <td><%= day.end_at.slice(0..1) if day.end_at.present? %></td>
           <td><%= day.end_at.slice(2..3) if day.end_at.present? %></td>
-          <td></td>
-          <td><%= day.reason %></td>
           <td>
-            <% output = "" %>
-            <% output1 = "" %>
-            <% output2 = "" %>
-            <% if day.request_end == "2" %>
-              <% output1 = "残業承認済" %>
-            <% elsif day.request_end == "3" %>
-              <% output1 = "残業否認" %>
+            <% if day.end_at.present? %>
+              <%= working_overtimes(day.worked_on, day.end_at, day.finished_at, day.ck_tomorrow) %>
             <% end %>
-            <% if day.request_change == "2" %>
-              <% output2 = "勤怠編集承認済" %>
-            <% elsif day.request_change == "3" %>
-              <% output2 = "勤怠編集否認" %>
-            <% end %>
-            <% if output1.present?%>
-              <% if output2.present?%>
-                <% output = output1 + " " + output2 %>
-              <% else %>
-                <% output = output1 %>
-              <% end %>
-            <% elsif output2.present?%>
-              <% output = output2 %>
-            <% end %>
-            <%= output %>
           </td>
+          <td><%= day.reason %></td>
+          <td><%= raw(nl2br(zan_info(day))) %></td>
         </tr>
       <% end %>
     </tbody>
     <tfoot>
-      <!--rowspan:縦結合、colspan：横結合-->
-      <tr>
+      <tr><!--rowspan:縦結合、colspan：横結合-->
         <td colspan="1">表示日数</td>
         <td colspan="2"><%= @attendances.count %></td>
         <td colspan="2">総合勤務時間</td>
@@ -161,11 +199,25 @@
         <td colspan="1"></td>
         <td colspan="1"></td>
         <td colspan="1"></td>
-        
         <td colspan="1">
-          所属長承認　<%= ck_fix_hantei %><br>
-          <%= f.select :employee_number, options_for_select(@user_superior,1), include_blank: true %><br>
-          <%= f.submit "申請", data: { confirm: "所属長承認申請してよろしいですか？" }, class: "btn btn-primary btn-attendance btn-sm" %>
+          所属長承認　<%= ck_fix_hantei %>
+          <% if @cnt_fix == 0 %>
+            <% if Date.current.beginning_of_month >= @first_day_m %>
+              <% if @cnt_change == 0 && @cnt_end == 0 %>
+                <br>
+                <%= f.select :employee_number, options_for_select(@user_superior,1), include_blank: true %><br>
+                <%= f.submit "申請", data: { confirm: "所属長承認申請してよろしいですか？" }, class: "btn btn-primary btn-attendance btn-sm" %>
+              <% else %>
+                <br>
+                <select disabled><option value="0">　　　</option></select><br>
+                <button type="button" class="btn btn-primary btn-attendance btn-sm" disabled>申請</button>
+              <% end %>              
+            <% else %>
+              <br>
+              <select disabled><option value="0">　　　</option></select><br>
+              <button type="button" class="btn btn-primary btn-attendance btn-sm" disabled>申請</button>
+            <% end %>
+          <% end %>
         </td>
       </tr>
     </tfoot>    

@@ -32,28 +32,6 @@ class AttendancesController < ApplicationController
   end
 
   def index
-
-    #@user = User.find(params[:id])
-    #@attendances = @user.attendances.where(worked_on: params[:fday]..params[:lday]).order(:worked_on)
-
-    @attendances = Attendance.all    
-
-    respond_to do |format|
-      format.html
-      format.csv do
-        products_csv
-        # send_data render_to_string, filename: "attendances.csv", type: :csv
-      end
-    end
-
-
-   # @products = Product.all
-  #  respond_to do |format|
-  #    format.html
-  #    format.csv do
-  #      send_data render_to_string, filename: "products.csv", type: :csv
-  #    end
-  #  end
   end
 
   def show
@@ -63,52 +41,14 @@ class AttendancesController < ApplicationController
   end
   
   def export
-
-    #@user = User.find(params[:id])
-    #@attendances = Attendance.all
     @attendances = Attendance.where(user_id: params[:id], worked_on: params[:fday]..params[:lday]).order('worked_on')
     @fday_s = params[:fday]
     respond_to do |format|
       format.html
       format.csv do
         products_csv
-        # send_data render_to_string, filename: "attendances.csv", type: :csv
       end
     end
-
-
-
-    #users = User.all
-#    @user = User.find(params[:id])
-#    @attendances = @user.attendances.where(worked_on: params[:fday]..params[:lday]).order(:worked_on)
-    
-#    respond_to do |format|
-#      format.html do
-          #html用の処理を書く
-#      end 
-#      format.csv do
-          #csv用の処理を書く
-#      end
-      
-      
-#=> "2016/05/23 15:08:47"
-      
-      
-#    end
-#    t = Time.current
-#    send_data render_to_string, filename: tTime.current.strftime("%Y%m%d%H%M%S") + ".csv", type: :csv
-#---------------------------
-    
-#    File.open('backup.csv', 'w') do |f|
-#      csv_string = CSV.generate do |csv|
-#        csv << User.column_names
-#        users = User.where(id: [1..100])
-#        users.each do |user|
-#          csv << user.attributes.values_at(*User.column_names)
-#        end
-#      end
-#      f.puts csv_string
-#    end
   end
 
   def update
@@ -119,7 +59,6 @@ class AttendancesController < ApplicationController
       if @attendance.update_attributes!(started_at: Time.current.change(sec: 0))
         flash[:info] = "おはようございます！"
       else
-      #debugger
         flash[:danger] = UPDATE_ERROR_MSG
       end
     elsif @attendance.finished_at.nil?
@@ -133,8 +72,8 @@ class AttendancesController < ApplicationController
   end
 
   def edit_one_month
-    # 上長選択用編集処理
-    user_s = User.where(superior: true)
+    # 上長選択用編集処理(アクセスユーザー本人は除く（上長権限保有していた場合）)
+    user_s = User.where(superior: true).where.not(id: params[:id])
     @user_superior = {}
     user_s.each do |u|
       @user_superior[u.name] = u.employee_number
@@ -142,44 +81,150 @@ class AttendancesController < ApplicationController
   end
 
   def update_one_month
+    #件数のカウント
+    tmp_cnt = 0
+    tmp_cnt_2 = 0
+    error_flg = false
+    # tmp_cnt = @user.attendances.where(worked_on: params[:f_day]..params[:l_day]).count
+    # puts "tmp_cnt_1:" + tmp_cnt.to_s
+
     ActiveRecord::Base.transaction do # トランザクションを開始します。
       attendances_params.each do |id, item|
         attendance = Attendance.find(id)
-        unless params[:user][:attendances][id][:started_at].blank? && params[:user][:attendances][id][:finished_at].blank?
-          wk_ck_tomorrow = params[:user][:attendances][id][:ck_tomorrow]
-          wk_a_started_at = date_change(attendance.worked_on, params[:user][:attendances][id][:started_at], "s", wk_ck_tomorrow)
-          wk_a_finished_at = date_change(attendance.worked_on, params[:user][:attendances][id][:finished_at], "f", wk_ck_tomorrow)
-          wk_b_started_at = attendance.started_at
-          wk_b_finished_at = attendance.finished_at
-          #変更有無確認
-          if wk_a_started_at != wk_b_started_at || wk_a_finished_at != wk_b_finished_at
-            attendance.update!(started_at: wk_a_started_at,
-                               finished_at: wk_a_finished_at,
-                               reason: params[:user][:attendances][id][:reason],
-                               request_change: "1",
-                               ck_tomorrow: wk_ck_tomorrow
-                              ) 
-            attendance_change = AttendanceChange.new(
-                        worked_on: attendance.worked_on,
-                        note: attendance.reason,
-                        after_started_at: wk_a_started_at,
-                        after_finished_at: wk_a_finished_at,
-                        before_started_at: wk_b_started_at,
-                        before_finished_at: wk_b_finished_at,
-                        superior_employee_number: params[:user][:attendances][id][:employee_number],
-                        request: "1",
-                        request_at: Time.current,
-                        user_id: attendance.user_id,
-                        attendance_id: attendance.id)
-            attendance_change.save!
+        # 出社時間かつ退社時間の入力必須チェック
+        if params[:user][:attendances][id][:started_at].present? && params[:user][:attendances][id][:finished_at].present?
+          # 備考かつ指示者確認の入力必須チェック
+          if params[:user][:attendances][id][:note].present? && params[:user][:attendances][id][:employee_number].present?
+            wk_ck_tomorrow = params[:user][:attendances][id][:ck_tomorrow_kintai]
+            wk_a_started_at = date_change(attendance.worked_on, params[:user][:attendances][id][:started_at], "s", wk_ck_tomorrow)
+            wk_a_finished_at = date_change(attendance.worked_on, params[:user][:attendances][id][:finished_at], "f", wk_ck_tomorrow)
+            wk_b_started_at = attendance.started_at
+            wk_b_finished_at = attendance.finished_at
+            # 変更有無確認チェック
+            if wk_a_started_at != wk_b_started_at || wk_a_finished_at != wk_b_finished_at
+              
+              ## 入力した出社時間が前日の退社時間より過去となっていないか
+              ## および、入力した出社時間が前日の終了予定時間（残業申請中でもあれば承認済みでなくても有効と扱う
+              ## 否認の場合はチェックから除外）より過去となっていないか
+              
+              # 変更有無確認（変更がない場合はスルー）
+              if wk_a_started_at != wk_b_started_at
+                # 昨日の退社日時と昨日の終了予定時間を取得する
+                attendance_yes = Attendance.find_by(user_id: attendance.user_id, worked_on: attendance.worked_on - 1)
+                
+                if attendance_yes.nil?
+                  puts "前日のデータがないためチェックスルー" 
+                else
+                  puts attendance_yes.finished_at if attendance_yes.finished_at.present?
+                  puts attendance_yes.end_at if attendance_yes.end_at.present? 
+                  puts attendance_yes.request_end if attendance_yes.request_end.present?
+                  # 翌日の出社日時の存在チェック（存在しない場合はスルー）  
+                  if attendance_yes.finished_at.present?
+                    # 日付チェック１（変更後の出社時間が前日の退社時間より過去となっていないか）
+                    if wk_b_started_at <= attendance_yes.finished_at
+                      puts "入力した出社時間が前日の退社時間より過去" # エラー処理へ
+                      error_msg = "入力した出社時間が、前日の退社時間より過去であった為、残業申請をキャンセルしました。"
+                      error_flg = true
+                      tmp_cnt_2 += 1
+                    else
+                      # 前日の終了予定時間の存在チェックかつ前日の残業申請における申請ステータスチェック
+                      # （終了予定時間が存在しない、または、終了予定時間が存在し申請ステータスが否認の場合はスルー）
+                      if attendance_yes.end_at.present? && attendance_yes.request_end != "3" 
+                        # 日付チェック２（変更後の出社時間が前日の終了予定時間より過去となっていないか）
+                        if wk_b_started_at <= attendance_yes.end_at
+                          puts "入力した出社時間が前日の終了予定時間より過去" # エラー処理へ
+                          error_msg = "入力した出社時間が、前日の終了予定時間より過去であった為、残業申請をキャンセルしました。"
+                          error_flg = true
+                          tmp_cnt_2 += 1
+                        end
+                      end                    
+                    end
+                  end
+                end
+              end
+              
+              # 直前の判定処理でエラーとなっていない場合
+              unless error_flg
+              
+                ## DB上にデータがなく、翌日のデータ申請が同時に発生していない場合
+                ## 入力した退社時間が翌日の出社時間より未来となっていないか
+                ## および、入力した退社時間が翌日の終了予定時間（残業申請承認済みがある）より過去となっていないか
+
+                ## DB上にデータがなく、翌日のデータ申請が同時に発生している場合
+                
+                ## DB上にデータがあり、翌日のデータ申請が同時に発生していない場合
+
+                ## DB上にデータがあり、翌日のデータ申請が同時に発生している場合
+
+                # 変更有無確認（変更がない場合はスルー）
+                if wk_a_finished_at != wk_b_finished_at
+                  # 翌日の出社日時を取得
+                  attendance_tom = Attendance.find_by(user_id: attendance.user_id, worked_on: attendance.worked_on + 1)
+
+                  if attendance_tom.nil?
+                    puts "翌日のデータない"
+                    # 同時に翌日に勤怠変更申請の有無
+                    
+                    
+                  else
+                    puts attendance_tom.started_at
+                    # 翌日の出社日時の存在チェック（存在しない場合はスルー）            
+                    if attendance_tom.started_at.present?
+                      # 日付チェック（変更後の退社時間が翌日の出社時間より未来となっていないか）
+                      if wk_b_started_at >= attendance_tom.finished_at
+                        puts "入力した退社時間が翌日の出社時間より未来" # エラー処理へ
+                        error_msg = "入力した退社時間が、翌日の出社時間より未来であった為、残業申請をキャンセルしました。"
+                        error_flg = true
+                        tmp_cnt_2 += 1
+                      end
+                    end
+                  end
+                end
+              end
+
+              # 直前の判定処理でエラーとなっていない場合
+              unless error_flg
+              
+                attendance.update!(started_at: wk_a_started_at,
+                                   finished_at: wk_a_finished_at,
+                                   note: params[:user][:attendances][id][:note],
+                                   request_change: "1",
+                                   ck_tomorrow_kintai: wk_ck_tomorrow
+                                  ) 
+                attendance_change = AttendanceChange.new(
+                            worked_on: attendance.worked_on,
+                            note: attendance.note,
+                            after_started_at: wk_a_started_at,
+                            after_finished_at: wk_a_finished_at,
+                            before_started_at: wk_b_started_at,
+                            before_finished_at: wk_b_finished_at,
+                            superior_employee_number: params[:user][:attendances][id][:employee_number],
+                            request: "1",
+                            request_at: Time.current,
+                            user_id: attendance.user_id,
+                            attendance_id: attendance.id)
+                attendance_change.save!
+                tmp_cnt += 1
+              
+              end
+            end
           end
         end
       end
     end
-    flash[:success] = "1ヶ月分の勤怠情報を更新しました。"
+    if error_flg
+      # 件数の判定を入れる（変更があった申請とチェックでエラーとなった件数がイコールの場合、dangerにする）
+      flash[:success] = "変更があった日時が、前日の退社時間や翌日の出社時間の相関関係が不正であった為、１部の勤怠変更申請をキャンセルしました。"
+    else
+      if tmp_cnt == 0
+        flash[:success] = "出社日または退社日に変更箇所がなかった、または、出社日または退社日に変更したが備考または指示者確認の指定がなかったため、勤怠変更申請は未実施です。"
+      else
+        flash[:success] = "勤怠変更申請完了しました。"
+      end
+    end
     redirect_to user_url(date: params[:date], chenge_mw: params[:chenge_mw])
   rescue ActiveRecord::RecordInvalid # トランザクションによるエラーの分岐です。
-    flash[:danger] = "無効な入力データがあった為、更新をキャンセルしました。"
+    flash[:danger] = "無効な入力データがあった為、勤怠変更申請をキャンセルしました。"
     redirect_to attendances_edit_one_month_user_url(date: params[:date], chenge_mw: params[:chenge_mw])
   end
 
@@ -187,56 +232,102 @@ class AttendancesController < ApplicationController
     @first_day = params[:date]
     @select_area = params[:chenge_mw]
     @attendance = Attendance.find(params[:id])
-    #@attendance = Attendance.where(id: params[:id])
-    #@attendance = Attendance.where(id: params[:id], request_end: "1")
     # 上長選択用編集処理
     user_s = User.where(superior: true)
     @user_superior = {}
     user_s.each do |u|
       @user_superior[u.name] = u.employee_number
     end
-    #debugger
   end
 
   def update_over_work
-    #require 'date'
     @first_day = params[:date]
     @select_area = params[:chenge_mw]
-    ActiveRecord::Base.transaction do # トランザクションを開始します。
-      attendance = Attendance.find(params[:id])
-      wk_ck_t = params[:attendance][:ck_tomorrow]
-      attendance.update!(note: params[:attendance][:note], 
-                                      end_at: params[:end_at_h] + params[:end_at_m],
-                                      ck_tomorrow: wk_ck_t,
-                                      request_end: "1")
-      tflg = false
-      tflg = true if wk_ck_t == "1"
-      @attendance = Attendance.find(params[:id])
-      @attendance_end = AttendanceEnd.new(worked_on: @attendance.worked_on,
-                                          end_at:  @attendance.end_at,
-                                          reason: @attendance.note,
-                                          tomorrow_flg: tflg,
-                                          superior_employee_number: params[:employee_number],
-                                          request: "1",
-                                          request_at: Time.current,
-                                          user_id: @attendance.user_id,
-                                          attendance_id: @attendance.id
-                                          )
-      @attendance_end.save!
+    wk_ck_t = params[:attendance][:ck_tomorrow] 
+    error_flg = false
+    error_msg = ""
+    attendance = Attendance.find(params[:id])
+
+    # 1つめ
+    # ここに退社時間と入力した終了予定時間の比較チェックを実施
+    # 終了予定時間が退社時間より未来であること
+    wk_finished_at = params[:finished_at]
+    wk_end_at = Time.zone.parse(params[:worked_on] + " " + params[:end_at_h] + ":" + params[:end_at_m] + ":00")
+    #wk_end_at = (params[:worked_on] + " " + params[:end_at_h] + ":" + params[:end_at_m] + ":00").to_time ← ZONEが効かない +0000となる
+    # 翌日にチェックしていた場合
+    if wk_ck_t == "1"
+      wk_end_at += 86400
     end
-    flash[:success] = '残業申請完了しました。'
-    redirect_to current_user
+    # 日付チェック
+    if wk_finished_at >= wk_end_at
+      puts "終了予定時間が退社時間より過去" # エラー処理へ
+      error_msg = "入力した終了予定時間が、当日の退社時間より過去であった為、残業申請をキャンセルしました。"
+      error_flg = true
+    end
+
+    # 2つめ
+    # 残業申請対象日の翌日に出社時間が登録済みである場合、その出社時間と入力した終了予定時間の比較チェックを実施
+    # 終了予定時間が出社時間より過去であること
+    unless error_flg # 1つめのチェックがエラーがない場合
+      # 翌日の出社日時を取得するため
+      attendance_to = Attendance.find_by(user_id: attendance.user_id, worked_on: attendance.worked_on + 1)
+      # 
+      if attendance_to.started_at.present?
+        puts attendance_to.started_at
+        # 日付チェック
+        if attendance_to.started_at <= wk_end_at
+          puts "終了予定時間が翌日の出社時間より未来" # エラー処理へ
+          error_msg = "入力した終了予定時間が、翌日の出社時間より未来であった為、残業申請をキャンセルしました。"
+          error_flg = true
+        end
+      else
+        puts "未設定 no_check"
+      end
+    end
+
+    unless error_flg
+      ActiveRecord::Base.transaction do # トランザクションを開始します。
+        #attendance = Attendance.find(params[:id])
+        #wk_ck_t = params[:attendance][:ck_tomorrow]
+        attendance.update!(reason: params[:attendance][:reason], 
+                                        end_at: params[:end_at_h] + params[:end_at_m],
+                                        ck_tomorrow: wk_ck_t,
+                                        request_end: "1")
+        tflg = false
+        tflg = true if wk_ck_t == "1"
+        puts "残１"
+        @attendance = Attendance.find(params[:id])
+        @attendance_end = AttendanceEnd.new(worked_on: @attendance.worked_on,
+                                            end_at:  @attendance.end_at,
+                                            reason: @attendance.reason,
+                                            tomorrow_flg: tflg,
+                                            superior_employee_number: params[:employee_number],
+                                            request: "1",
+                                            request_at: Time.current,
+                                            user_id: @attendance.user_id,
+                                            attendance_id: @attendance.id
+                                            )
+        puts "残２"
+        @attendance_end.save!
+        puts "残３"
+      end
+      flash[:success] = '残業申請完了しました。'
+      redirect_to current_user
+    else
+      flash[:danger] = error_msg
+      redirect_to current_user
+    end
   rescue ActiveRecord::RecordInvalid # トランザクションによるエラーの分岐です。
-    flash[:danger] = "無効な入力データがあった為、更新をキャンセルしました。"
+    flash[:danger] = "無効な入力データがあった為、残業申請をキャンセルしました。"
     redirect_to current_user
   end
+
   
   def edit_end_ck
     @user = User.find(params[:id])
     @attendance_end = AttendanceEnd.where(superior_employee_number: current_user.employee_number, request: "1").order("worked_on DESC, user_id ASC")
     @user_end = AttendanceEnd.where(superior_employee_number: current_user.employee_number).group(:user_id).order(:user_id)
     @req_sec = { :"なし" => "0", :"申請中" => "1", :"承認" => "2", :"否認" => "3" }
-    
     @first_day = params[:date]
     @select_area = params[:chenge_mw]
   end
@@ -244,24 +335,28 @@ class AttendancesController < ApplicationController
   def update_end_ck
     @first_day = params[:date]
     @select_area = params[:chenge_mw]
-
+    #件数のカウント
+    tmp_cnt = 0
     ActiveRecord::Base.transaction do # トランザクションを開始します。
-    
       attendances_params2.each do |id|
-        
         if params[:user][:attendance_ends][id][:ck_change] == "1"
           attendance_end = AttendanceEnd.find(id)
           attendance_end.update_attributes!(request: params[:user][:attendance_ends][id][:request],
                                         confirm_at: Time.current)
           attendance = Attendance.find(attendance_end.attendance_id)
           attendance.update_attributes!(request_end: params[:user][:attendance_ends][id][:request])
+          tmp_cnt += 1
         end
       end
     end
-    flash[:success] = "残業申請を更新しました。"
+    if tmp_cnt == 0
+      flash[:success] = "変更項目にチェックした箇所がなかったため、残業申請を実施しませんでした。"
+    else
+      flash[:success] = "残業申請を更新しました。"
+    end
     redirect_to current_user
   rescue ActiveRecord::RecordInvalid # トランザクションによるエラーの分岐です。
-    flash[:danger] = "無効な入力データがあった為、更新をキャンセルしました。"
+    flash[:danger] = "無効な入力データがあった為、残業申請をキャンセルしました。"
     redirect_to current_user
   end
 
@@ -277,6 +372,8 @@ class AttendancesController < ApplicationController
   def update_change_ck
     @first_day = params[:date]
     @select_area = params[:chenge_mw]
+    #件数のカウント
+    tmp_cnt = 0
     ActiveRecord::Base.transaction do # トランザクションを開始します。
       attendances_params3.each do |id|
         if params[:user][:attendance_changes][id][:ck_change] == "1"
@@ -285,13 +382,18 @@ class AttendancesController < ApplicationController
                                         confirm_at: Time.current)
           attendance = Attendance.find(attendance_change.attendance_id)
           attendance.update_attributes!(request_change: params[:user][:attendance_changes][id][:request])
+          tmp_cnt += 1
         end
       end
     end
-    flash[:success] = "勤怠変更申請を更新しました。"
+    if tmp_cnt == 0
+      flash[:success] = "変更項目にチェックした箇所がなかったため、勤怠変更申請を実施しませんでした。"
+    else
+      flash[:success] = "勤怠変更申請を更新しました。"
+    end
     redirect_to current_user
   rescue ActiveRecord::RecordInvalid # トランザクションによるエラーの分岐です。
-    flash[:danger] = "無効な入力データがあった為、更新をキャンセルしました。"
+    flash[:danger] = "無効な入力データがあった為、勤怠変更申請をキャンセルしました。"
     redirect_to current_user
   end
   
@@ -301,21 +403,17 @@ class AttendancesController < ApplicationController
   end
 
   def edit_change_log
-    @user = User.find(params[:id])
+    # データ引継ぎ
     @first_day = params[:select_day]
     @select_area = params[:chenge_mw]
-    
-    # 一覧表示用-----------------------------------------------------------------------------------------100
-    # 勤怠変更承認済みデータを取得
-    @attendance_change = AttendanceChange.where(deleted_flg: false, request: "2", user_id: params[:id])
-                                         .order("worked_on ASC, request_at ASC")
-    # 勤怠変更承認済みデータ件数を取得
-    @attendance_change_cnt = AttendanceChange.where(deleted_flg: false, request: "2", user_id: params[:id]).count
-    puts @attendance_change_cnt                    
-    
+    # 初期処理
+    @user = User.find(params[:id])
+
     # 年月プルダウン項目制御用---------------------------------------------------------------------------100
     # 勤怠変更承認済みデータを日付の昇順でソート
-    atten_ymd = AttendanceChange.where(deleted_flg: false, request: "2", user_id: params[:id]).group(:worked_on).order(:worked_on)
+    atten_ymd = AttendanceChange.where(deleted_flg: false, 
+                                           request: "2",
+                                           user_id: params[:id]).group(:worked_on).order(:worked_on)
     
     @log_y = {}
     cnt_y = 0
@@ -325,35 +423,42 @@ class AttendancesController < ApplicationController
     w_ym_a = "0"
     w_ym_b = "0"
     w_y_hyouji = ""
+    w_y_hyouji_m = ""
     w_y_genzai = "0"
 
     @w_cnt_y = ""
     @w_cnt_m = ""
 
     # 年月プルダウンのデフォルト値
-    # 親画面から遷移で、親画面で遷移時に選択していた表示年を設定
-    if params[:gamen] == "s"
+    # 親画面からの起動の場合、親画面で選択していた表示年を引継ぎ設定
+    if params[:gamen] == "m"
       w_y_hyouji = params[:select_day].slice(0..3)
+      w_y_hyouji_m = params[:select_day]
+    elsif params[:gamen] == "s"
+      w_y_hyouji = params[:setday].slice(0..3)
+      w_y_hyouji_m = params[:setday]
+    elsif params[:gamen] == "r"
+      w_y_hyouji = ""
+      w_y_hyouji_m = ""
+    else
+      puts "tuuka"
+      puts params[:user][:sec_month]
+      puts params[:sec_month]
+      w_y_hyouji = params[:user][:sec_month].slice(0..3)
+      w_y_hyouji_m = params[:user][:sec_month].slice(0..3) + "-" + params[:user][:sec_month].slice(4..5) + "-01"
     end
     
     # 年の編集
     atten_ymd.each do |ymd|
       w_y_a = ymd.worked_on.year.to_s
-
       w_y_genzai = w_y_a if cnt_y == 0 # 最古の年を初期値に設定、履歴が現在日に該当する年がない場合を最古の年を画面表示のデフォルト値として設定するため
       cnt_y += 1
       if w_y_a != w_y_b
         @log_y[w_y_a] = w_y_a
-#        tmpy = params[:select_day]
-        puts "year-------------------------------------------"
-        puts w_y_a
-
         if w_y_hyouji == ""
           if w_y_hyouji == w_y_a # デフォルト値の決定
             @w_cnt_y = w_y_a
             w_y_genzai = w_y_a
-            puts "year2-------------------------------------------"
-            puts @w_cnt_y
           end
         end
       end
@@ -361,62 +466,73 @@ class AttendancesController < ApplicationController
     end
     
     # 月の編集
+    m_flg = false
     atten_ymd.each do |ymd|
       w_y_a = ymd.worked_on.year.to_s
       if w_y_genzai == w_y_a
-
         w_ym_a = ymd.worked_on.year.to_s + format('%02d', ymd.worked_on.month)
-
         if w_ym_a != w_ym_b
           @log_m[w_ym_a.slice(4..6)] = w_ym_a
-          tmpm = params[:select_day]
-          puts "month-------------------------------------------"
-          puts tmpm.slice(5..6)
-          puts w_ym_a.slice(4..5)
+          tmpm = w_y_hyouji_m
           if tmpm.slice(5..6) == w_ym_a.slice(4..5) # デフォルト値の決定
             @w_cnt_m = w_ym_a
-            puts "month2-------------------------------------------"
-            puts @w_cnt_m
+            m_flg = true
+          else
+            unless m_flg
+              @w_cnt_m = w_ym_a
+            end
           end
         end
       end
       w_ym_b = w_ym_a
     end
 
+    # デフォルト年月より取得開始年月日と取得終了年月日を設定
+    str_target_day = @w_cnt_y + @w_cnt_m + "01"
+    from_target_day = str_target_day.to_date.beginning_of_month
+    to_target_day = from_target_day.end_of_month
+    # 一覧表示用-----------------------------------------------------------------------------------------100
+    # 勤怠変更承認済みデータを取得
+    @attendance_change = AttendanceChange.where(deleted_flg: false, request: "2", user_id: params[:id], worked_on: from_target_day..to_target_day)
+                                         .order("worked_on ASC, request_at ASC")
+    # 勤怠変更承認済みデータ件数を取得
+    @attendance_change_cnt = AttendanceChange.where(deleted_flg: false, request: "2", user_id: params[:id], worked_on: from_target_day..to_target_day).count
+
   end
 
   def update_change_log
+    # データ引継ぎ
     @first_day = params[:date]
     @select_area = params[:chenge_mw]
+    
     puts "Start update_change_log"
-    str_target_day = params[:user][:sec_month] + "01"
+    puts params[:commit]
+
+    str_target_day = params[:user][:setday] 
     from_target_day = str_target_day.to_date.beginning_of_month
     to_target_day = from_target_day.end_of_month
-    #ActiveRecord::Base.transaction do # トランザクションを開始します。
-      #attendances_params5.each do |id|
-      
+
+    puts "勤怠ログをリセット処理開始"  
     attendance_change = AttendanceChange.all
     if attendance_change.where(user_id: params[:id],
                               worked_on: from_target_day..to_target_day,
                               request: "2",
                               deleted_flg: false
                              )
-                       .update_all(deleted_at: Time.current,
+                        .update_all(deleted_at: Time.current,
                                     deleted_flg: true
                                    )
 
-    #if attendance_change.update_all!(deleted_at: Time.current,
-    #                                 deleted_flg: true
-    #                                )
-      #end
-    #end
-      flash[:success] = params[:user][:sec_year] + "年" + params[:user][:sec_month].slice(4..5) + "月分の勤怠ログをリセットしました。"
-      redirect_to attendances_edit_change_log_user_path(current_user, gamen: "r")
+      puts "勤怠ログをリセットしました。"
+      flash[:success] = str_target_day.slice(0..3) + "年" + str_target_day.slice(4..5) + "月分の勤怠ログをリセットしました。"
+      #@info_message = str_target_day.slice(0..3) + "年" + str_target_day.slice(4..5) + "月分の勤怠ログをリセットしました。"
+      #render :edit_change_log_success
+      #render :edit_change_log_error
+      #render :edit_change_log
     else
-  #rescue ActiveRecord::RecordInvalid # トランザクションによるエラーの分岐です。
       flash[:danger] = "無効な入力データがあった為、リセットをキャンセルしました。"
-      redirect_to attendances_edit_change_log_user_path(current_user, gamen: "r")
     end
+    redirect_to current_user, data: { dismiss: "modal"}
   end
 
   def edit_fix_ck
@@ -440,10 +556,10 @@ class AttendancesController < ApplicationController
         end
       end
     end
-    flash[:success] = "1ヶ月分の勤怠申請を更新しました。"
+    flash[:success] = "1ヶ月分の勤怠承認申請を更新しました。"
     redirect_to current_user
   rescue ActiveRecord::RecordInvalid # トランザクションによるエラーの分岐です。
-    flash[:danger] = "無効な入力データがあった為、更新をキャンセルしました。"
+    flash[:danger] = "無効な入力データがあった為、1ヶ月分の勤怠承認申請をキャンセルしました。"
     redirect_to current_user
   end
 
@@ -451,7 +567,7 @@ class AttendancesController < ApplicationController
 
     # 1ヶ月分の勤怠情報を扱います。
     def attendances_params
-      params.require(:user).permit(attendances: [:started_at, :finished_at, :ck_tomorrow, :reason, :employee_number])[:attendances]
+      params.require(:user).permit(attendances: [:started_at, :finished_at, :ck_tomorrow_kintai, :note, :employee_number])[:attendances]
     end
 
     def attendances_params2
@@ -507,8 +623,7 @@ class AttendancesController < ApplicationController
           csv << column_values
         end
       end
-#Time.current.strftime("%Y%m%d%H%M%S")
-      #send_data(csv_date,filename: "attendances.csv")
+
       if @fday_s.kind_of?(Date)
         puts "------------------Date"
       elsif @fday_s.kind_of?(Time)
@@ -523,6 +638,5 @@ class AttendancesController < ApplicationController
     end
 
     # common helper?
-
 
 end

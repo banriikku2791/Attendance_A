@@ -18,20 +18,51 @@ class UsersController < ApplicationController
     #user_kinmu = Users.all
       user_kinmu = User.where(id: Attendance.where.not(started_at: nil).where(worked_on: Date.current).select(:user_id))
       @users = user_kinmu.paginate(page: params[:page])
+      @users_cnt = User.where(id: Attendance.where.not(started_at: nil).where(worked_on: Date.current).select(:user_id)).count
+      # puts @users_cnt
     end
   end
 
   def show
+    # 選択月の中で、出社時間が未登録の件数を取得
     @worked_sum = @attendances_m.where.not(started_at: nil).count
-    @end_info_cnt = AttendanceEnd.where(superior_employee_number: @user.employee_number, request: "1").count
-    @change_info_cnt = AttendanceChange.where(superior_employee_number: @user.employee_number, request: "1").count
-    @fix_info_cnt = AttendanceFix.where(superior_employee_number: @user.employee_number, request: "1").count
-    # 上長選択用編集処理
-    user_s = User.where(superior: true)
+
+    # 上長に依頼されている各種申請件数(1:所属長承認申請,2:勤怠変更申請,3:残業申請)
+    @info_cnt_0 = {}
+    @info_cnt_1 = {}
+    @info_cnt_3 = {}
+    (1..3).each do |n|
+      val0 = 0 # 上長として本人に　承認依頼がきた件数のワーク変数
+      val1 = 0 # 本人から上長へ　　申請中件数のワーク変数　未承認:1(申請中)
+      val3 = 0 # 本人から上長へ　　否認件数のワーク変数　　否認　:3(否認)　承認済:2
+      if n == 1
+        # 所属長承認申請状況
+        val0 = AttendanceFix.where(superior_employee_number: @user.employee_number, request: "1").count
+        val1 = AttendanceFix.where(user_id: @user.id, request: "1").count    
+        val3 = AttendanceFix.where(user_id: @user.id, request: "3").count
+      elsif n == 2
+        # 勤怠変更申請状況 
+        val0 = AttendanceChange.where(superior_employee_number: @user.employee_number, request: "1").count
+        val1 = AttendanceChange.where(user_id: @user.id, request: "1").count
+        val3 = AttendanceChange.where(user_id: @user.id, request: "3").count
+      elsif n == 3
+        # 残業申請状況
+        val0 = AttendanceEnd.where(superior_employee_number: @user.employee_number, request: "1").count
+        val1 = AttendanceEnd.where(user_id: @user.id, request: "1").count
+        val3 = AttendanceEnd.where(user_id: @user.id, request: "3").count
+      end
+      @info_cnt_0[n] = val0
+      @info_cnt_1[n] = val1
+      @info_cnt_3[n] = val3
+    end
+
+    # 上長選択用編集処理(アクセスユーザー本人は除く（上長権限保有していた場合）)
+    user_s = User.where(superior: true).where.not(id: @user.id)
     @user_superior = {}
     user_s.each do |u|
       @user_superior[u.name] = u.employee_number
     end
+
   end
 
   def show_readonly
@@ -75,7 +106,7 @@ class UsersController < ApplicationController
     else
       flash[:danger] = "#{@user.name}の更新は失敗しました。<br>" + @user.errors.full_messages.join("<br>")
     end
-    redirect_to users_path
+    redirect_to users_path(key: 1)
   end
 
   def destroy

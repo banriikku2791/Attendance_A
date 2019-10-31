@@ -73,9 +73,23 @@ class ApplicationController < ActionController::Base
       @last_day_m = @last_day
       @select_area = "m"
     end
+    
+    # 勤怠変更申請中の有無
+    @cnt_change = AttendanceChange.where(user_id: params[:id], worked_on: @first_day_m..@last_day_m, request: "1").count
+    puts "Cnt_change"
+    puts @cnt_change
+    @info_change = AttendanceChange.where(user_id: params[:id], worked_on: @first_day_m..@last_day_m, request: "1")
+
+    # 残業申請中の有無
+    @cnt_end = AttendanceEnd.where(user_id: params[:id], worked_on: @first_day_m..@last_day_m, request: "1").count
+    puts "Cnt_end"
+    puts @cnt_end
+    @info_end = AttendanceEnd.where(user_id: params[:id], worked_on: @first_day_m..@last_day_m, request: "1")
+
     # 締め処理有無
     @cnt_fix = AttendanceFix.where(user_id: params[:id], worked_on: @first_day_m).count
-    puts "@cnt_fix:" + @cnt_fix.to_s 
+    
+#    puts "@cnt_fix:" + @cnt_fix.to_s 
     @name_fix = ""
     @req_fix = ""
     name_num = 0
@@ -84,17 +98,17 @@ class ApplicationController < ActionController::Base
       attendanceFix_r.each do |ar|
         @req_fix = ar.request
       end
-puts "@req_fix:" + @req_fix
+#puts "@req_fix:" + @req_fix
       attendanceFix_num = AttendanceFix.where(user_id: params[:id], worked_on: @first_day_m).select(:superior_employee_number).limit(1).order('created_at DESC')
       attendanceFix_num.each do |anum|
         name_num = anum.superior_employee_number
       end
-puts "name_num:" + name_num.to_s 
+#puts "name_num:" + name_num.to_s 
       user_name = User.where(employee_number: name_num).select(:name).limit(1) 
       user_name.each do |un|
         @name_fix = un.name
       end
-puts "@name_fix:" + @name_fix 
+#puts "@name_fix:" + @name_fix 
     end
     
     # 編集当日の該当月
@@ -104,6 +118,7 @@ puts "@name_fix:" + @name_fix
     # ユーザーに紐付く一ヶ月分のレコードを検索し取得します。
     @attendances = @user.attendances.where(worked_on: @first_day..@last_day).order(:worked_on)
     @attendances_m = @user.attendances.where(worked_on: @first_day_m..@last_day_m).order(:worked_on)
+    
     unless one_month_or_week.count == @attendances.count # それぞれの件数（日数）が一致するか評価します。
       ActiveRecord::Base.transaction do # トランザクションを開始します。
         # 繰り返し処理により、1ヶ月分の勤怠データを生成します。
@@ -221,6 +236,5 @@ puts "@name_fix:" + @name_fix
       return "45"
     end
   end
-
-
+  
 end

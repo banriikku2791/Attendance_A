@@ -1,5 +1,6 @@
 <% provide(:title, @user.name) %>
-<%= form_with(model: @user, url: attendances_update_one_month_user_path(date: @first_day, chenge_mw: @select_area), local: true, method: :patch) do |f| %>
+<% provide(:button_text, '編集を保存する') %>
+<%= form_with(model: @user, url: attendances_update_one_month_user_path(date: @first_day, chenge_mw: @select_area, f_day: @first_day, l_day: @last_day), local: true, method: :patch) do |f| %>
   <div>
     <h1>勤怠編集画面</h1>
     <table class="table table-bordered table-condensed table-hover table-striped" id="table-attendances">
@@ -17,6 +18,7 @@
       </thead>
       <tbody>
         <% @cnt = 0 %>
+        <% changeflg = false %>
         <% @attendances.each do |day| %>
           <% @cnt += 1 %>
           <%= f.fields_for "attendances[]", day do |attendance| %>
@@ -30,27 +32,43 @@
                 <td>
               <% end %>
               <%= $days_of_the_week[day.worked_on.wday] %></td>
-              <% if Date.current < day.worked_on %>
-                <td><%= attendance.time_field :started_at, readonly: true, class: "form-control" %></td>
-                <td><%= attendance.time_field :finished_at, readonly: true, class: "form-control" %></td>
-                <td><%= attendance.check_box :ck_tomorrow, disabled: true %></td>
+              
+              <% if change_check(@info_change, day.worked_on) %>
+                  <!-- 勤怠変更申請中である場合、入力項目非活性化制御 -->
+                  <td><%= attendance.time_field :started_at, readonly: true, class: "form-control" %></td>
+                  <td><%= attendance.time_field :finished_at, readonly: true, class: "form-control" %></td>              
+                  <td><%= attendance.check_box :ck_tomorrow_kintai, disabled: true %></td>
+                  <td>
+                    <% if day.started_at.present? && day.finished_at.present? %>
+                      <%= working_times(day.started_at, day.finished_at) %>
+                    <% end %>
+                  </td>
+                  <td><%= attendance.text_field :note, readonly: true, class: "form-control" %></td>
+                  <td><%= change_superior_name(@info_change, day.worked_on, @user_superior) %>へ申請中</td>          
               <% else %>
-                <td><%= attendance.time_field :started_at, class: "form-control" %></td>
-                <td><%= attendance.time_field :finished_at, class: "form-control" %></td>
-                <td><%= attendance.check_box :ck_tomorrow %></td>
-              <% end %>
-              <td>
-                <% if day.started_at.present? && day.finished_at.present? %>
-                  <%= working_times(day.started_at, day.finished_at) %>
+                <!-- 勤怠変更申請中でない場合、入力項目活性化制御 -->
+                <% if Date.current < day.worked_on %>
+                  <td><%= attendance.time_field :started_at, readonly: true, class: "form-control" %></td>
+                  <td><%= attendance.time_field :finished_at, readonly: true, class: "form-control" %></td>
+                  <td><%= attendance.check_box :ck_tomorrow_kintai, disabled: true %></td>
+                <% else %>
+                  <td><%= attendance.time_field :started_at, class: "form-control" %></td>
+                  <td><%= attendance.time_field :finished_at, class: "form-control" %></td>
+                  <td><%= attendance.check_box :ck_tomorrow_kintai %></td>
                 <% end %>
-              </td>
-              <% if Date.current < day.worked_on %>
-                <td><%= attendance.text_field :reason, readonly: true, class: "form-control" %></td>
-                <td><%= attendance.select :employee_number, {}, {}, :disabled => true %></td>
-              <% else %>
-                <td><%= attendance.text_field :reason, class: "form-control" %></td>
-                <td><%= attendance.select :employee_number, options_for_select(@user_superior,1), include_blank: true %></td>
-              <% end %>
+                <td>
+                  <% if day.started_at.present? && day.finished_at.present? %>
+                    <%= working_times(day.started_at, day.finished_at) %>
+                  <% end %>
+                </td>
+                <% if Date.current < day.worked_on %>
+                  <td><%= attendance.text_field :note, readonly: true, class: "form-control" %></td>
+                  <td><%= attendance.select :employee_number, {}, {}, :disabled => true %></td>
+                <% else %>
+                  <td><%= attendance.text_field :note, class: "form-control" %></td>
+                  <td><%= attendance.select :employee_number, options_for_select(@user_superior,1), include_blank: true %></td>
+                <% end %>
+              <% end %>              
             </tr>
           <% end %>
         <% end %>
@@ -58,7 +76,7 @@
     </table>
   </div>
   <div class="center">
+    <%= f.submit yield(:button_text), class: "btn btn-lg btn-primary" %>
     <%= link_to "キャンセル", user_path(date: @first_day, chenge_mw: @select_area), class: "btn btn-lg btn-primary" %>
-    <%= f.submit "編集を保存する", class: "btn btn-lg btn-primary" %>
   </div>
 <% end %>

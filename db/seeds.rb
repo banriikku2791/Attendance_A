@@ -15,12 +15,14 @@ User.create!(name: "管理者",
   password = "password"
   affiliation = "開発部"
   employee_number = n+1000
+  uid = "A00#{n+1}"
   User.create!(name: name,
                email: email,
                password: password,
                password_confirmation: password,
                affiliation: affiliation,
                employee_number: employee_number,
+               uid: uid, 
                superior: false)
 end
 

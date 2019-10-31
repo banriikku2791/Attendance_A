@@ -1,57 +1,59 @@
-<% provide(:class_text, 'base-new') %>
-<% provide(:button_text, '変更を送信する') %>
+<% provide(:class_text, 'atten-modal') %>
+<% provide(:button_text, '残業申請する') %>
 <div class="modal-dialog modal-lg modal-dialog-center">
   <div class="modal-content">
-    <div class="modal-header">
+    <div class="modal-header-custom">
       <button type="button" class="close" data-dismiss="modal" aria-label="Close">
         <span aria-hidden="true">&times;</span>
       </button>
     </div>
+    <%= form_with(model: @attendance, url: update_over_work_attendance_path(@attendance, date: @first_day), local: true, method: :patch) do |f| %>
     <h1 class="modal-title">【残業申請】</h1>
     <div class="modal-body">
       <div class="row">
         <div class="col-md-10 col-md-offset-1">
-          <%= form_with(model: @attendance, url: update_over_work_attendance_path(@attendance, date: @first_day), local: true, method: :patch) do |f| %>
-           
-            <table class="table table-bordered table-condensed table-hover table-striped" id="table-attendances">
-              <thead>
-                <tr>
-                  <th>日付</th>
-                  <th>曜日</th>
-                  <th>終了予定時間</th>
-                  <th>翌日</th>
-                  <th>業務処理内容</th>
-                  <th>指示者確認㊞</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><%= l(@attendance.worked_on, format: :short) %></td>
-                  <% if @attendance.worked_on.wday == 0 %>
-                    <td class="txt-youbi-sun">
-                  <% elsif @attendance.worked_on.wday == 6 %>
-                    <td class="txt-youbi-sat">
-                  <% else %>
-                    <td>
-                  <% end %>
-                  <%= $days_of_the_week[@attendance.worked_on.wday] %></td>
-                  <td><%= select_tag 'end_at_h', options_for_select(@t_h,'18') %> : <%= select_tag 'end_at_m', options_for_select(@t_m,'00') %></td>
-                  <td><%= f.check_box :ck_tomorrow %></td>
-                  <td><%= f.text_field :note, class: "form-control" %></td>
-                  <td><%= select_tag 'employee_number' , options_for_select(@user_superior,1), include_blank: true %></td>
-                </tr>
-              </tbody>
-            </table>
-        
-            <div class="center">
-              <%= f.submit yield(:button_text), class: "btn btn-primary btn-#{yield(:class_text)}" %>
-              <button type="button" class="btn btn-default btn-<%= yield(:class_text) %>" data-dismiss="modal">
-                キャンセル
-              </button>
-              <% end %>
-            </div>
+          <table class="table table-bordered table-condensed table-hover table-striped" id="table-attendances">
+            <thead>
+              <tr>
+                <th>日付</th>
+                <th>曜日</th>
+                <th>終了予定時間</th>
+                <th>翌日</th>
+                <th>業務処理内容</th>
+                <th>指示者確認㊞</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><%= l(@attendance.worked_on, format: :short) %></td>
+                <%= hidden_field_tag :worked_on, @attendance.worked_on %>
+                <%= hidden_field_tag :finished_at, @attendance.finished_at %>
+                <% if @attendance.worked_on.wday == 0 %>
+                  <td class="txt-youbi-sun">
+                <% elsif @attendance.worked_on.wday == 6 %>
+                  <td class="txt-youbi-sat">
+                <% else %>
+                  <td>
+                <% end %>
+                <%= $days_of_the_week[@attendance.worked_on.wday] %></td>
+                <td><%= select_tag 'end_at_h', options_for_select(@t_h,'18') %> : <%= select_tag 'end_at_m', options_for_select(@t_m,'00') %></td>
+                <td><%= f.check_box :ck_tomorrow %></td>
+                <td><%= f.text_field :reason, class: "form-control" %></td>
+                <td><%= select_tag 'employee_number' , options_for_select(@user_superior,1), include_blank: true %></td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
+    <div class="modal-footer-custom">
+      <div class="center">
+        <%= f.submit yield(:button_text), class: "btn btn-primary btn-#{yield(:class_text)}" %>
+        <button type="button" class="btn btn-default btn-<%= yield(:class_text) %>" data-dismiss="modal">
+          キャンセル
+        </button>
+      </div>
+    </div>
+    <% end %>
   </div>
 </div>

@@ -1,5 +1,6 @@
 <% provide(:title, 'All Users') %>
 <% provide(:class_text, 'user--edit') %>
+<% provide(:no_data_message, '該当者なし') %>
 <% if params[:key] == "1" %>
   <h1>ユーザー一覧</h1>
   <div>
@@ -54,11 +55,11 @@
                   <%= f.label :password, class: "label-#{yield(:class_text)}" %>
                   <%= f.text_field :password, class: "form-control" %>
                   <%= f.label :basic_work_time, class: "label-#{yield(:class_text)}" %>
-                  <%= f.time_field :basic_work_time, class: "form-control" %>
+                  <input class="form-control" type="time" name="user[basic_work_time]", value=<%= user.basic_work_time %>>
                   <%= f.label :designated_work_start_time, class: "label-#{yield(:class_text)}" %>
-                  <%= f.time_field :designated_work_start_time, class: "form-control" %>
+                  <input class="form-control" type="time" name="user[designated_work_start_time]", value=<%= user.designated_work_start_time %>>
                   <%= f.label :designated_work_end_time, class: "label-#{yield(:class_text)}" %>
-                  <%= f.time_field :designated_work_end_time, class: "form-control" %>
+                  <input class="form-control" type="time" name="user[designated_work_end_time]", value=<%= user.designated_work_end_time %>>
                   <div class="center">
                     <br><%= f.submit "編集する", class: "btn btn-sm btn-primary" %>
                   </div>
@@ -92,17 +93,24 @@
           <th class="center"><%= t("activerecord.attributes.user.name") %></th>
         </tr>
       </thead>
-      <tbody>
-      <% @users.each do |user| %>
-        <tr>
-          <td class="center"><%= user.id %></td>
-          <td class="center"><%= user.employee_number %></td>
-          <td><%= user.name %></td>
-        </tr>
+      <% if @users_cnt == 0 %>    
+        <tbody>
+          <tr>
+            <td colspan="3"><h4 class="center"><%= yield(:no_data_message) %></h4></td>
+          </tr>
+        </tbody>
+      <% else %>
+        <tbody>
+        <% @users.each do |user| %>
+          <tr>
+            <td class="center"><%= user.id %></td>
+            <td class="center"><%= user.employee_number %></td>
+            <td><%= user.name %></td>
+          </tr>
+        <% end %>
+        </tbody>
       <% end %>
-      </tbody>
     </table>
     <%= will_paginate %>
   </div>
 <% end %>
-

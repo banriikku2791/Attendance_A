@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20190911224205) do
+ActiveRecord::Schema.define(version: 20191008052621) do
 
   create_table "attendance_changes", force: :cascade do |t|
     t.date "worked_on"
@@ -75,6 +75,7 @@ ActiveRecord::Schema.define(version: 20190911224205) do
     t.string "request_end"
     t.string "request_change"
     t.string "ck_tomorrow", default: "0"
+    t.string "ck_tomorrow_kintai", default: "0"
     t.index ["user_id"], name: "index_attendances_on_user_id"
   end
 
@@ -95,8 +96,8 @@ ActiveRecord::Schema.define(version: 20190911224205) do
     t.string "remember_digest"
     t.boolean "admin", default: false
     t.string "affiliation"
-    t.datetime "basic_time", default: "2019-09-11 23:00:00"
-    t.datetime "work_time", default: "2019-09-11 22:30:00"
+    t.datetime "basic_time", default: "2019-10-07 23:00:00"
+    t.datetime "work_time", default: "2019-10-07 22:30:00"
     t.boolean "superior", default: false
     t.string "designated_work_start_time", default: "0800"
     t.string "designated_work_end_time", default: "1700"
