@@ -76,24 +76,26 @@ class ApplicationController < ActionController::Base
     
     # 勤怠変更申請中の有無
     @cnt_change = AttendanceChange.where(user_id: params[:id], worked_on: @first_day_m..@last_day_m, request: "1").count
-    puts "Cnt_change"
-    puts @cnt_change
+    # puts "Cnt_change"
+    # puts @cnt_change
     @info_change = AttendanceChange.where(user_id: params[:id], worked_on: @first_day_m..@last_day_m, request: "1")
 
     # 残業申請中の有無
     @cnt_end = AttendanceEnd.where(user_id: params[:id], worked_on: @first_day_m..@last_day_m, request: "1").count
-    puts "Cnt_end"
-    puts @cnt_end
+    # puts "Cnt_end"
+    # puts @cnt_end
     @info_end = AttendanceEnd.where(user_id: params[:id], worked_on: @first_day_m..@last_day_m, request: "1")
 
     # 締め処理有無
-    @cnt_fix = AttendanceFix.where(user_id: params[:id], worked_on: @first_day_m).count
+    @cnt_fix = AttendanceFix.where(user_id: params[:id], worked_on: @first_day_m, request: "1").count
+    # puts "Cnt_fix"
+    # puts @cnt_fix
     
 #    puts "@cnt_fix:" + @cnt_fix.to_s 
     @name_fix = ""
     @req_fix = ""
     name_num = 0
-    if @cnt_fix != 0
+    if @cnt_fix == 1
       attendanceFix_r = AttendanceFix.where(user_id: params[:id], worked_on: @first_day_m).select(:request).limit(1).order('created_at DESC')
       attendanceFix_r.each do |ar|
         @req_fix = ar.request
@@ -108,6 +110,22 @@ class ApplicationController < ActionController::Base
       user_name.each do |un|
         @name_fix = un.name
       end
+    else
+      attendanceFix_r = AttendanceFix.where(user_id: params[:id], worked_on: @first_day_m).select(:request).limit(1).order('created_at DESC')
+      attendanceFix_r.each do |ar|
+        @req_fix = ar.request
+      end
+      attendanceFix_num = AttendanceFix.where(user_id: params[:id], worked_on: @first_day_m).select(:superior_employee_number).limit(1).order('created_at DESC')
+      attendanceFix_num.each do |anum|
+        name_num = anum.superior_employee_number
+      end
+#puts "name_num:" + name_num.to_s 
+      user_name = User.where(employee_number: name_num).select(:name).limit(1) 
+      user_name.each do |un|
+        @name_fix = un.name
+      end
+
+      
 #puts "@name_fix:" + @name_fix 
     end
     
@@ -184,14 +202,38 @@ class ApplicationController < ActionController::Base
   end
 
   def date_change(w_day, t_day, ck_sf, ck_to)
-    str_d = w_day.year.to_s + format('%02d', w_day.month) + format('%02d', w_day.day) + t_day.slice(0..1) + t_day.slice(3..4) + "00" 
-    if ck_sf == "f" && ck_to == "1"
-      return Time.zone.parse(str_d) + 86400
+    if t_day.present?
+      str_d = w_day.year.to_s + format('%02d', w_day.month) + format('%02d', w_day.day) + t_day.slice(0..1) + t_day.slice(3..4) + "00" 
+      # puts str_d
+      if ck_sf == "f" && ck_to == "1"
+        return Time.zone.parse(str_d) + 86400
+      else
+        return Time.zone.parse(str_d)
+      end
     else
-      return Time.zone.parse(str_d)
+      return nil
     end
   end
   
+
+  def date_change2(w_day, t_day, ck_sf, ck_to, flg)
+    if t_day.present?
+      if flg
+        str_d = w_day.year.to_s + format('%02d', w_day.month) + format('%02d', w_day.day) + t_day.slice(0..1) + t_day.slice(3..4) + "00" 
+      else
+        str_d = w_day.year.to_s + format('%02d', w_day.month) + format('%02d', w_day.day) + t_day + "00" 
+      end
+      # puts str_d
+      if ck_sf == "f" && ck_to == "1"
+        return Time.zone.parse(str_d) + 86400
+      else
+        return Time.zone.parse(str_d)
+      end
+    else
+      return nil
+    end
+  end
+
   # attendances_helperにもあるのを補正 exportで使用 controller側でコールできないため
   def working_times_at(start, finish)
     

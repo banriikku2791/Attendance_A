@@ -1,5 +1,6 @@
 <% provide(:class_text, 'atten-modal') %>
-<% provide(:button_text, '残業申請する') %>
+<% provide(:button_text1, '残業申請する') %>
+<% provide(:button_text2, 'キャンセル') %>
 <div class="modal-dialog modal-lg modal-dialog-center">
   <div class="modal-content">
     <div class="modal-header-custom">
@@ -7,7 +8,12 @@
         <span aria-hidden="true">&times;</span>
       </button>
     </div>
-    <%= form_with(model: @attendance, url: update_over_work_attendance_path(@attendance, date: @first_day), local: true, method: :patch) do |f| %>
+    <%= 
+      form_with(model: @attendance, 
+                  url: update_over_work_attendance_path(date: @first_day, chenge_mw: @select_area, user_id: @user_id),
+                local: true,
+               method: :patch) do |f|
+    %>
     <h1 class="modal-title">【残業申請】</h1>
     <div class="modal-body">
       <div class="row">
@@ -36,10 +42,16 @@
                   <td>
                 <% end %>
                 <%= $days_of_the_week[@attendance.worked_on.wday] %></td>
-                <td><%= select_tag 'end_at_h', options_for_select(@t_h,'18') %> : <%= select_tag 'end_at_m', options_for_select(@t_m,'00') %></td>
+                <% wk_hm = ck_val(@attendance.end_at, '1800') %>
+                <% wk_h = wk_hm.slice(0..1) %>
+                <% wk_m = wk_hm.slice(2..3) %>
+                <td>
+                  <%= select_tag 'end_at_h', options_for_select(@t_h, wk_h) %> : <%= select_tag 'end_at_m', 
+                  options_for_select(@t_m, wk_m) %>
+                </td>
                 <td><%= f.check_box :ck_tomorrow %></td>
                 <td><%= f.text_field :reason, class: "form-control" %></td>
-                <td><%= select_tag 'employee_number' , options_for_select(@user_superior,1), include_blank: true %></td>
+                <td><%= select_tag 'employee_number', options_for_select(@user_superior,1), include_blank: true %></td>
               </tr>
             </tbody>
           </table>
@@ -48,10 +60,14 @@
     </div>
     <div class="modal-footer-custom">
       <div class="center">
-        <%= f.submit yield(:button_text), class: "btn btn-primary btn-#{yield(:class_text)}" %>
-        <button type="button" class="btn btn-default btn-<%= yield(:class_text) %>" data-dismiss="modal">
+        <%= f.submit yield(:button_text1), class: "btn btn-primary btn-#{yield(:class_text)}" %>
+        <!--
+        <button type="button" class="btn btn-default btn-" data-dismiss="modal">
           キャンセル
         </button>
+        -->
+        <%= link_to yield(:button_text2), user_path(date: @first_day, chenge_mw: @select_area), 
+        class: "btn btn-primary btn-#{yield(:class_text)}", data: {dismiss: "modal"} %>
       </div>
     </div>
     <% end %>

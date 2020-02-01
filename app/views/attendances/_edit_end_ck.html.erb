@@ -47,7 +47,8 @@
                           <%= $days_of_the_week[ae.worked_on.wday] %></td>
                           <td><%= ae.end_at.slice(0..1) + ":"+ ae.end_at.slice(2..3) if ae.end_at.present? %></td>
                           <td><%= @user.designated_work_end_time %></td>
-                          <td><%= working_overtimes(ae.end_at, @user.designated_work_end_time, ae.tomorrow_flg) %></td>
+                          <% # atten = Attendance.find_by(user_id: ue.user_id, worked_on: ae.worked_on) %>
+                          <td><%= working_overtimes2(ae.worked_on, ae.end_at, @user.designated_work_end_time, ae.tomorrow_flg) %></td>
                           <td><%= ae.reason %></td>
                           <td><%= a_end.select :request ,options_for_select(@req_sec,1) %></td>
                           <td><%= a_end.check_box 'ck_change' %></td>

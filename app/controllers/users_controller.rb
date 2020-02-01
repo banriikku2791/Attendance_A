@@ -38,18 +38,32 @@ class UsersController < ApplicationController
       if n == 1
         # 所属長承認申請状況
         val0 = AttendanceFix.where(superior_employee_number: @user.employee_number, request: "1").count
-        val1 = AttendanceFix.where(user_id: @user.id, request: "1").count    
-        val3 = AttendanceFix.where(user_id: @user.id, request: "3").count
+        val1 = AttendanceFix.where(user_id: @user.id, request: "1").count
+        #val3 = AttendanceFix.where(user_id: @user.id, request: "3").count
+        # wk1_val3 = AttendanceFix.where(user_id: @user.id, request: "1").count # 指定月に申請中の有無
+        # wk2_val3 = AttendanceFix.where(user_id: @user.id, request: "3").count # 指定月に否認の有無
+        wk_val3 = AttendanceFix.where(user_id: @user.id).select('id, worked_on, request, MAX(created_at)').group(:worked_on).order('worked_on DESC')
+        wk_cnt = 0
+        wk_val3.each do |cnt3|
+          if cnt3.request == "3"
+            wk_cnt += 1
+          end
+        end
+        val3 =  wk_cnt # 否認のみを集計した結果を設定
       elsif n == 2
         # 勤怠変更申請状況 
         val0 = AttendanceChange.where(superior_employee_number: @user.employee_number, request: "1").count
-        val1 = AttendanceChange.where(user_id: @user.id, request: "1").count
-        val3 = AttendanceChange.where(user_id: @user.id, request: "3").count
+        #val1 = AttendanceChange.where(user_id: @user.id, request: "1").count
+        val1 = Attendance.where(user_id: @user.id, request_change: "1").count
+        #val3 = AttendanceChange.where(user_id: @user.id, request: "3").group(:worked_on).count
+        val3 = Attendance.where(user_id: @user.id, request_change: "3").count
       elsif n == 3
         # 残業申請状況
         val0 = AttendanceEnd.where(superior_employee_number: @user.employee_number, request: "1").count
-        val1 = AttendanceEnd.where(user_id: @user.id, request: "1").count
-        val3 = AttendanceEnd.where(user_id: @user.id, request: "3").count
+        #val1 = AttendanceEnd.where(user_id: @user.id, request: "1").count
+        val1 = Attendance.where(user_id: @user.id, request_end: "1").count
+        #val3 = AttendanceEnd.where(user_id: @user.id, request: "3").group(:worked_on).count
+        val3 = Attendance.where(user_id: @user.id, request_end: "3").count
       end
       @info_cnt_0[n] = val0
       @info_cnt_1[n] = val1

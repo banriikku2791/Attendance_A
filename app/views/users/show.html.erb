@@ -1,5 +1,5 @@
 <% provide(:title, @user.name) %>
-<%= form_with(model: @user, url: user_attendances_path(user_id: @user.id ,m_day: @first_day), local: true, method: :post) do |f| %>
+<%= form_with(model: @user, url: user_attendances_path(user_id: @user.id , m_day: @first_day, date: @first_day, chenge_mw: @select_area), local: true, method: :post) do |f| %>
 <div>
   <table class="table table-bordered table-condensed", id="user-table">
     <tr>
@@ -122,12 +122,12 @@
       <% @atten_cnum.each do |cnum| %>
       <% @employee_cnum = cnum.superior_employee_number %>
       <% end %>
-      <% puts @employee_cnum %>
+      <% # puts @employee_cnum %>
       <% if @employee_cnum != 0 %>
         <% @atten_name = User.where(employee_number: @employee_cnum).select(:name) %>
         <% @atten_name.each do |cname| %>
           <% @employee_name = cname.name %>
-          <% puts @employee_name %>
+          <% # puts @employee_name %>
         <% end %>
       <% end %>
         <tr>
@@ -137,11 +137,13 @@
                 <button type="button" class="btn btn-primary btn-attendance btn-sm" disabled>残業申請</button><!-- 開始日が設定されていない箇所は非活性 -->
               <% elsif day.request_end == "1" %>
                 <button type="button" class="btn btn-primary btn-attendance btn-sm" disabled>残業申請</button><!-- 申請中は非活性 -->
+              <% elsif Date.current != day.worked_on && day.finished_at.nil? %>
+                <button type="button" class="btn btn-primary btn-attendance btn-sm" disabled>残業申請</button><!-- 申請日が出社日でなく退社日が未設定は非活性 -->
               <% else %>
-                <%= link_to "残業申請", edit_over_work_attendance_path(day, date: @first_day, chenge_mw: @select_area), remote: true, class: "btn btn-primary btn-attendance btn-sm" %>
+                <%= link_to "残業申請", edit_over_work_attendance_path(day, date: @first_day, chenge_mw: @select_area, user_id: @user.id), remote: true, class: "btn btn-primary btn-attendance btn-sm" %>
               <% end %>
             <% else %>
-              <button type="button" class="btn btn-primary btn-attendance btn-sm" disabled>残業申請</button><!-- 申請日が本日以降は非活性 -->
+              <button type="button" class="btn btn-primary btn-attendance btn-sm" disabled>残業申請</button><!-- 申請日が翌日以降は非活性 -->
             <% end %>
           </td>
           <td><%= l(day.worked_on, format: :short) %></td>
@@ -182,7 +184,21 @@
             <% end %>
           </td>
           <td><%= day.reason %></td>
-          <td><%= raw(nl2br(zan_info(day))) %></td>
+          <% @msg_zan = shiji_info(1,day) %>
+          <% @msg_color_zan = @color %>
+          <% @msg_kin = shiji_info(2,day) %>
+          <% @msg_color_kin = @color %>
+          <% if @msg_zan.present? %>
+            <% if @msg_kin.present? %>
+              <td><font color=<%= @msg_color_zan %>><%= raw(nl2br(@msg_zan)) %></font><br><font color=<%= @msg_color_kin %>><%= raw(nl2br(@msg_kin)) %></font></td>
+            <% else %>
+              <td><font color=<%= @msg_color_zan %>><%= raw(nl2br(@msg_zan)) %></font></td>
+            <% end %>
+          <% elsif @msg_kin.present? %>
+            <td><font color=<%= @msg_color_kin %>><%= raw(nl2br(@msg_kin)) %></font></td>
+          <% else %>
+            <td></td>
+          <% end %>
         </tr>
       <% end %>
     </tbody>
@@ -216,6 +232,12 @@
               <br>
               <select disabled><option value="0">　　　</option></select><br>
               <button type="button" class="btn btn-primary btn-attendance btn-sm" disabled>申請</button>
+            <% end %>
+          <% else %>
+            <% if @req_fix == "2" || @req_fix == "3" %>
+              <br>
+              <%= f.select :employee_number, options_for_select(@user_superior,1), include_blank: true %><br>
+              <%= f.submit "申請", data: { confirm: "所属長承認申請してよろしいですか？" }, class: "btn btn-primary btn-attendance btn-sm" %>
             <% end %>
           <% end %>
         </td>
