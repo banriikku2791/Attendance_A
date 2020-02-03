@@ -2,8 +2,12 @@ class AttendancesController < ApplicationController
 
   before_action :set_user, only: [:edit_one_month, :update_one_month]
   before_action :set_user2, only: [:update, :create, :edit_over_work, :update_over_work]
-  before_action :logged_in_user, only: [:update, :edit_one_month, :edit_over_work]
-  before_action :admin_or_correct_user, only: [:update, :edit_one_month, :update_one_month]
+  before_action :logged_in_user, only: [:show, :update, :edit_one_month, :edit_over_work]
+  #before_action :admin_or_correct_user, only: [:update, :edit_one_month, :update_one_month]
+  
+  before_action :correct_user, only: [:update, :edit_one_month, :update_one_month]
+  before_action :un_admin_user, only: [:edit_one_month]  
+  
   before_action :set_one_month_or_week, only: :edit_one_month
   before_action :time_select, only: [:edit_over_work]
 
@@ -15,21 +19,27 @@ class AttendancesController < ApplicationController
     @first_day = params[:date]
     @select_area = params[:chenge_mw]
     @user_id = params[:user_id]
-    attendance_fixs = AttendanceFix.new(
-                                       worked_on: params[:m_day],
-                                       superior_employee_number: params[:user][:employee_number],
-                                       request: "1",
-                                       request_at: Time.current,
-                                       user_id: params[:user_id]
-                                      )
-    if attendance_fixs.save!
-      flash[:success] = "所属長承認申請を行いました。"
-      # redirect_to current_user
+    @employee_number = params[:user][:employee_number]
+    if @employee_number.blank?
+      flash[:danger] = "所属長の指定がない為、所属長承認申請をキャンセルしました。"
       redirect_to user_url(date: @first_day, chenge_mw: @select_area, id: @user_id)
     else
-      flash[:danger] = "無効な入力データがあった為、所属長承認申請をキャンセルしました。"
-      # redirect_to current_user
-      redirect_to user_url(date: @first_day, chenge_mw: @select_area, id: @user_id)
+      attendance_fixs = AttendanceFix.new(
+                                         worked_on: params[:m_day],
+                                         superior_employee_number: params[:user][:employee_number],
+                                         request: "1",
+                                         request_at: Time.current,
+                                         user_id: params[:user_id]
+                                        )
+      if attendance_fixs.save!
+        flash[:success] = "所属長承認申請を行いました。"
+        # redirect_to current_user
+        redirect_to user_url(date: @first_day, chenge_mw: @select_area, id: @user_id)
+      else
+        flash[:danger] = "無効な入力データがあった為、所属長承認申請をキャンセルしました。"
+        # redirect_to current_user
+        redirect_to user_url(date: @first_day, chenge_mw: @select_area, id: @user_id)
+      end
     end
   end
 
@@ -442,6 +452,15 @@ class AttendancesController < ApplicationController
         wk_end_at += 86400
       end
       # 日付チェック
+      puts "worked_on"
+      puts params[:worked_on]
+      puts params[:end_at_h]
+      puts params[:end_at_m]
+      puts "wk_end_at"
+      puts wk_end_at
+      puts "wk_finished_at"
+      puts wk_finished_at
+      
       if wk_finished_at >= wk_end_at
         # puts "終了予定時間が退社時間より過去" # エラー処理へ
         error_msg = "入力した終了予定時間が、当日の退社時間より過去であった為、残業申請をキャンセルしました。"

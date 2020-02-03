@@ -1,0 +1,12 @@
+<% if @attendance_fix.errors.any? %>
+  <div id="error_explanation">
+    <div class="alert alert-danger">
+      入力エラーが<%= @attendance_fix.errors.count %>件ありました。
+    </div>
+    <ul>
+    <% @attendance_fix.errors.full_messages.each do |msg| %>
+      <li><%= msg %></li>
+    <% end %>
+    </ul>
+  </div>
+<% end %>

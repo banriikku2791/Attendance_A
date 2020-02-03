@@ -23,7 +23,7 @@
     <div class="panel-group" id="accordion">
       <% @users.each do |user| %>
         <tr>
-          <%= user.name %><br>|
+          <%= @start_no += 1  %>．<%= user.name %><br>|
           <span class="mgl-10">
             <%= link_to "削除", user, method: :delete,
                   data: { confirm: "削除してよろしいですか？" }, class: "btn btn-primary btn-sm" %>
@@ -101,9 +101,10 @@
         </tbody>
       <% else %>
         <tbody>
+        <% cnt_no = 0 %>
         <% @users.each do |user| %>
           <tr>
-            <td class="center"><%= user.id %></td>
+            <td class="center"><%= cnt_no += 1 %></td>
             <td class="center"><%= user.employee_number %></td>
             <td><%= user.name %></td>
           </tr>

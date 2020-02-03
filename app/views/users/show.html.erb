@@ -9,8 +9,8 @@
         　<%= l(@first_day, format: :middle) %>　時間管理表　
         <%= link_to "→", user_path(date: @first_day.next_month, chenge_mw: "m"), class: "btn btn-sm btn-primary" %>
       </td>
-      <td>指定勤務開始時間　<%= format_basic_info(@user.work_time) %><br>指定勤務終了時間　<%= format_basic_info(@user.work_time) %></td>
-      <td colspan="3">基本時間　<%= format_basic_info(@user.basic_time) %></td>
+      <td>指定勤務開始時間　<%= format_worktime(1, @user.designated_work_start_time) %><br>指定勤務終了時間　<%= format_worktime(2, @user.designated_work_end_time) %></td>
+      <td colspan="3">基本時間　<%= format_basictime(@user.basic_work_time) %></td>
       <td>初日　<%= l(@first_day_m, format: :short_0) %></td>
     </tr>
     <tr>
@@ -133,7 +133,7 @@
         <tr>
           <td>
             <% if Date.current >= day.worked_on %>
-              <% if day.started_at.nil? %>
+              <% if day.started_at.nil? || day.finished_at.nil? %>
                 <button type="button" class="btn btn-primary btn-attendance btn-sm" disabled>残業申請</button><!-- 開始日が設定されていない箇所は非活性 -->
               <% elsif day.request_end == "1" %>
                 <button type="button" class="btn btn-primary btn-attendance btn-sm" disabled>残業申請</button><!-- 申請中は非活性 -->

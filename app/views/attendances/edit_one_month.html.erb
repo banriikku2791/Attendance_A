@@ -4,7 +4,7 @@
 <%= form_with(model: @user, url: attendances_update_one_month_user_path(date: @first_day, chenge_mw: @select_area, f_day: @first_day, l_day: @last_day), local: true, method: :patch) do |f| %>
   <div>
     <h1>勤怠編集画面</h1>
-    <div><%= link_to yield(:button_text2), user_path(date: @first_day, chenge_mw: @select_area), class: "btn btn-sm btn-primary" %></div>
+    <!-- <div><%= link_to yield(:button_text2), user_path(date: @first_day, chenge_mw: @select_area), class: "btn btn-sm btn-primary" %></div> -->
     <table class="table table-bordered table-condensed table-hover table-striped" id="table-attendances">
       <thead>
         <tr>

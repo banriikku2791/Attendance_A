@@ -1,16 +1,44 @@
 class UsersController < ApplicationController
 
-  before_action :set_user, only: [:show, :edit, :update, :destroy, :edit_basic_info, :update_basic_info, :edit_basic_all, :update_basic_all, :update_all]
-  before_action :logged_in_user, only: [:index, :edit, :update, :destroy, :edit_basic_info, :update_basic_info, :edit_basic_all, :update_basic_all, :update_all]
-  before_action :correct_user, only: [:edit, :update]
-  before_action :admin_or_correct_user, only: [:show, :index]
-  before_action :admin_user, only: [:destroy, :edit_basic_info, :update_basic_info, :edit_basic_all, :update_basic_all]
+  before_action :set_user,       only: [:show, :edit, :update, :destroy, :edit_basic_info, :update_basic_info, :edit_basic_all, :update_basic_all, :update_all]
+  before_action :logged_in_user, only: [:index, :show, :edit, :create, :update, :destroy, :edit_basic_info, :update_basic_info, :edit_basic_all, :update_basic_all, :update_all]
+  
+  before_action :correct_user, only: [:show, :edit]
+  before_action :un_admin_user, only: [:show]
+    
+  before_action :admin_user, only: [:index, :update, :destroy, :edit_basic_info, :update_basic_info, :edit_basic_all, :update_basic_all]
+
   before_action :set_one_month_or_week, only: [:show]
   before_action :set_one_month_or_week_2, only: [:show_readonly]
 
+  # before_action :set_user, only: [:show, :edit, :update, :destroy, :edit_basic_info, :update_basic_info, :edit_basic_all, :update_basic_all, :update_all]
+  # before_action :logged_in_user, only: [:index, :edit, :update, :destroy, :edit_basic_info, :update_basic_info, :edit_basic_all, :update_basic_all, :update_all]
+  # before_action :correct_user, only: [:edit, :update]
+  # before_action :admin_or_correct_user, only: [:index]
+  # before_action :admin_user, only: [:index, :destroy, :edit_basic_info, :update_basic_info, :edit_basic_all, :update_basic_all]
+  # before_action :set_one_month_or_week, only: [:show]
+  # before_action :set_one_month_or_week_2, only: [:show_readonly]
+
   def index
     if params[:key] == "1"
-      @users = User.paginate(page: params[:page])
+      # 管理者以外のユーザを取得
+      tmp_user = User.where(admin: false)
+      @users = tmp_user.paginate(page: params[:page])
+      page_cnt = 0
+      unless params[:page].blank?
+        page_cnt = params[:page].to_i
+      end
+      # １ページに表示される件数、デフォルト値：30件/頁 を基準に項番を設定
+      @start_no = 0
+      if page_cnt >= 2
+        @start_no = (page_cnt - 1) * 30
+      end
+      puts "page"
+      puts params[:page]
+      puts @start_no
+      puts @users.all.count
+      
+      # @users = User.paginate(admin: false, page: params[:page])
     elsif params[:key] == "2"
     #  user_kinmu = Attendance.joins(:users)
     #                        .where.not(started_at: nil)
@@ -125,8 +153,9 @@ class UsersController < ApplicationController
 
   def destroy
     @user.destroy
-    flash[:success] = "#{@user.name}のデータを削除しました。"
-    redirect_to users_url
+    flash[:success] = "#{@user.name}のユーザー情報を削除しました。"
+    # redirect_to users_url
+    redirect_to users_path(key: 1)
   end
 
   def edit_basic_info
@@ -158,9 +187,14 @@ class UsersController < ApplicationController
     #Object.import(params[:filename])
     #redirect_to "/object"
     registered_count = import_files
-    flash[:info] = "#{registered_count}件登録しました"
-    redirect_to users_path
-    #redirect_to users_path, notice: "#{registered_count}件登録しました"
+    if registered_count == 0
+      flash[:info] = "選択したファイルに登録可能なユーザー情報は存在しませんでした。"
+    else
+      flash[:success] = "#{registered_count}件のユーザー情報を登録しました。"
+    end
+    redirect_to users_path(key: 1)
+    # redirect_to users_path
+    # redirect_to users_path, notice: "#{registered_count}件登録しました"
   end
 
   private
@@ -190,17 +224,91 @@ class UsersController < ApplicationController
       #debugger
       # windowsで作られたファイルに対応するので、encoding: "SJIS"を付けている
       CSV.foreach(params[:file_data].path, headers: true, encoding: "SJIS") do |row|
-        datas << ::User.new({ name: row["name"], email: row["email"], affiliation: row["affiliation"], 
+        
+        #bwt = ck_time(row["basic_work_time"])
+        #dwst = ck_time(row["designated_work_start_time"])
+        #dwet = ck_time(row["designated_work_end_time"])
+        
+        datas << ::User.new({ 
+          name: row["name"],
+          email: row["email"],
+          affiliation: row["affiliation"],
           employee_number: row["employee_number"],
-          uid: row["uid"], basic_work_time: row["basic_work_time"],
-          designated_work_start_time: row["designated_work_start_time"],
-          designated_work_end_time: row["designated_work_end_time"],
-          superior: row["superior"], admin: row["admin"], password: row["password"]})
+          uid: row["uid"], 
+          basic_work_time: ck_time(row["basic_work_time"]),
+          designated_work_start_time: ck_time(row["designated_work_start_time"]),
+          designated_work_end_time: ck_time(row["designated_work_end_time"]),
+          superior: ck_Bool(row["superior"]),
+          admin: ck_Bool(row["admin"]),
+          password: row["password"]})
       end
       # importメソッドでバルクインサートできる
       ::User.import(datas)
       # 何レコード登録できたかを返す
       ::User.count - current_file_row_count
+    end
+
+    # 時間形式チェック
+    # hh:mm 形式となっているか。なっていない場合、hh:mmの形式で返却
+    # 入力：文字列（期待値 → hh:mm）
+    # 出力：hh:mmの形式で返却
+    def ck_time(time)
+      set_time = "00:00"
+      tikan_time = time.to_s.delete(":")
+      puts "入力値" + time.to_s
+      puts "----------tikan_time-----------"
+      puts tikan_time
+      # 数値判定
+      if tikan_time =~ /^[0-9]+$/
+        puts "----------数値チェック通過-----------"
+        len_time = tikan_time.size
+        if len_time <= 4
+          if len_time == 1
+            puts "----------len-1-----------"
+            set_time = "00:0" + tikan_time
+          elsif len_time == 2
+            puts "----------len-2-----------"
+            if tikan_time.to_i < 60
+              set_time = "00:" + tikan_time
+            else
+              # 初期値を返却("00:00")
+            end
+          elsif len_time == 3
+            puts "----------len-3-----------"
+            if tikan_time.slice(1,2).to_i < 60
+              set_time = "0" + tikan_time.slice(0,1) + ":" + tikan_time.slice(1,2)
+            else
+              # 初期値を返却("00:00")
+            end
+          elsif len_time == 4
+            puts "----------len-4-----------"
+            if tikan_time.slice(0,2).to_i < 24 && tikan_time.slice(2,2).to_i < 60
+              set_time = tikan_time.slice(0,2) + ":" + tikan_time.slice(2,2)
+            else
+              # 初期値を返却("00:00")
+            end        
+          else
+            # 初期値を返却("00:00")
+          end
+        else
+          # 初期値を返却("00:00")
+        end
+      else
+        # 初期値を返却("00:00")
+      end
+      return set_time
+    end
+
+    # Booleank形式チェック
+    # FALSE or TRUE 形式になっているか。なっていない場合、FALSEの形式で返却
+    # 入力：文字列（期待値 → FALSE or TRUE）
+    # 出力：FALSE or TRUEの形式で返却
+    def ck_Bool(val)
+      if val == "TRUE" || val == "FALSE"
+        return val
+      else
+        return ""
+      end
     end
 
 end

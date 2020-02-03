@@ -9,6 +9,42 @@ module UsersHelper
     total_m = ((((time.hour * 60) + time.min) * day)) / 60.0
     return format("%.2f", total_m)
   end
+  
+  # 文字列の時間を編集する。値がない場合、初期値を返す
+  # kbn  1:開始、2:終了
+  # time DBの値を受け取る
+  # 戻り値 例．9:00、17:00
+  def format_worktime(kbn, time)
+    set_time = ""
+    if time == "" 
+      if kbn == 1
+        set_time = " 9:00"
+      else
+        set_time = "17:00"
+      end
+    else
+      if time.slice(0) == "0"
+        set_time = " " + time.slice(1,4)
+      else
+        set_time = time
+      end
+    end
+    return set_time
+  end
+
+  def format_basictime(time)
+    set_time = ""
+    if time == "" 
+      set_time = "8.00"
+    else
+      tmp_h = time.slice(0,2).to_i
+      tmp_m = time.slice(3,2).to_i
+      
+      tmp_hm = format("%.2f", ((tmp_h * 60) + tmp_m) / 60.0)
+      set_time = tmp_hm.to_s
+    end
+    return set_time
+  end
 
   def ck_fix_hantei
     #puts "ck----------------------------hantei"
