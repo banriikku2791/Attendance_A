@@ -225,6 +225,11 @@ class ApplicationController < ActionController::Base
       @t_m[format('%02d', u)] = format('%02d', u)
     end
   end
+  
+  def gamen_ini
+    # 画面情報初期化
+    Gameninfo.destroy_all
+  end
 
   def date_change(w_day, t_day, ck_sf, ck_to)
     if t_day.present?

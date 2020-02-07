@@ -1,0 +1,2 @@
+class AttenGaman < ApplicationRecord
+end

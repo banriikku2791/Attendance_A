@@ -13,17 +13,23 @@ module AttendancesHelper
   # 出勤時間と退勤時間を受け取り、在社時間を計算して返します。
   def working_times(start, finish)
 
-    w_times = (((finish - start) / 60) / 60.0) - ((finish - start) / 60).div(60)
+    if start <= finish
     
-    if w_times >= 0 && w_times < 0.25
-      format("%.2f", ((((finish - start) / 60).div(60))))
-    elsif w_times >= 0.25 && w_times < 0.50
-      format("%.2f", ((((finish - start) / 60).div(60))) + 0.25)
-    elsif w_times >= 0.50 && w_times < 0.75
-      format("%.2f", ((((finish - start) / 60).div(60))) + 0.5)
+      w_times = (((finish - start) / 60) / 60.0) - ((finish - start) / 60).div(60)
+  
+      if w_times >= 0 && w_times < 0.25
+        format("%.2f", ((((finish - start) / 60).div(60))))
+      elsif w_times >= 0.25 && w_times < 0.50
+        format("%.2f", ((((finish - start) / 60).div(60))) + 0.25)
+      elsif w_times >= 0.50 && w_times < 0.75
+        format("%.2f", ((((finish - start) / 60).div(60))) + 0.5)
+      else
+        format("%.2f", ((((finish - start) / 60).div(60))) + 0.75)
+      end
+
     else
-      format("%.2f", ((((finish - start) / 60).div(60))) + 0.75)
-    end   
+      return ""
+    end
 
   end
 
@@ -75,6 +81,9 @@ module AttendancesHelper
   def working_overtimes2(targetday, yotei, base, tflg)
     # require "date"
     #dt = Time.current
+    puts yotei    
+    puts base
+    
     dt = targetday
     # str_b = dt.year.to_s + format('%02d', dt.month) + format('%02d', dt.day) + base + "00" 
     str_b = dt.year.to_s + format('%02d', dt.month) + format('%02d', dt.day) + base.delete(":") + "00"
@@ -82,10 +91,10 @@ module AttendancesHelper
     # dt += 86400 if tflg == "1"
     #dt += 86400 if tflg
     dt += 1 if tflg
-    str_y = dt.year.to_s + format('%02d', dt.month) + format('%02d', dt.day) + yotei + "00"
-    # puts tflg
-    # puts str_b
-    # puts str_y
+    str_y = dt.year.to_s + format('%02d', dt.month) + format('%02d', dt.day) + yotei.delete(":") + "00"
+    puts tflg
+    puts str_b
+    puts str_y
     start = Time.zone.parse(str_b)
     #start = str_b
     #finish = Time.parse(str_y)
@@ -107,6 +116,39 @@ module AttendancesHelper
 
   end
 
+  # 出社時間と帰社時間を受け取り、勤務時間を計算して返します。
+  # 第１引数：基準となる日付（date型 ex.worked_on）
+  # 第２引数：出社時間（ex:'09:00'）
+  # 第３引数：帰社日時（ex:'19:00'）
+  # 第４引数：翌日フラグ（'0' or '1'）
+  # 返却値　：時間を十進数に変換した値（ex:'8.0',9.25','10.5','12.75'）
+  def working_hhmm(targetday, s_work, f_work, tflg)
+
+    puts "------------ working_hhmm ------------------"
+    puts targetday
+    puts s_work
+    puts f_work
+    puts tflg
+
+
+
+    # 日付を文字列に変換
+    dt = targetday
+    # 年月日と出社時間を連結
+    s_str = dt.year.to_s + format('%02d', dt.month) + format('%02d', dt.day) + s_work.delete(":") + "00"
+
+    # 年月日と帰社時間を連結
+    dt += 1 if tflg == "1"
+    f_str = dt.year.to_s + format('%02d', dt.month) + format('%02d', dt.day) + f_work.delete(":")  + "00"
+
+    # 文字列型　→　TIME型
+    s_time = Time.zone.parse(s_str)
+    f_time = Time.zone.parse(f_str)
+
+    # 在社時間算出
+    return working_times(s_time, f_time)
+
+  end
 
   
   def working_minutes(target_min)

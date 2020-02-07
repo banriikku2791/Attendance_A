@@ -3,6 +3,23 @@
 <% provide(:button_text2, '戻る') %>
 <%= form_with(model: @user, url: attendances_update_one_month_user_path(date: @first_day, chenge_mw: @select_area, f_day: @first_day, l_day: @last_day), local: true, method: :patch) do |f| %>
   <div>
+    <% @atten_gamen = Gameninfo.all %>
+    <% if params[:inflg] == "true" %>
+      <%= "<<エラー箇所>>" %>
+      <% @atten_gamen.each do | data |  %>
+        <% if data.error_msg.present? %>
+          <% msg = data.error_msg %>
+          <font color="red">
+            <%= raw(msg.gsub(/\R/, "<br>")) %>
+          </font>
+        <% elsif data.normal_msg.present? %>
+          <% msg = data.normal_msg %>
+          <font color="blue">
+            <%= raw(msg.gsub(/\R/, "<br>")) %>
+          </font>
+        <% end %>
+      <% end %>
+    <% end %>
     <h1>勤怠編集画面</h1>
     <!-- <div><%= link_to yield(:button_text2), user_path(date: @first_day, chenge_mw: @select_area), class: "btn btn-sm btn-primary" %></div> -->
     <table class="table table-bordered table-condensed table-hover table-striped" id="table-attendances">
@@ -24,8 +41,30 @@
         <% @attendances.each do |day| %>
           <% @cnt += 1 %>
           <%= f.fields_for "attendances[]", day do |attendance| %>
+            <!-- 勤怠変更申請時にエラーがあった場合、手入力した情報を保持するための変数設定 -->
+            <% in_started_at = "" %>
+            <% in_finished_at = "" %>
+            <% in_ck_tomorrow_kintai = "" %>
+            <% in_note = "" %>
+            <% in_employee_number = "" %>
+            <% in_flg = false %>
+            <!-- 勤怠変更申請時にエラーがあった場合、手入力した情報を保持 -->
+            <% if params[:inflg] == "true" %>
+              <% atten_gamen = Gameninfo.where(keyid: day.id) %>
+              <% atten_gamen.each do |data| %>            
+                <% in_started_at = data.started_at %>
+                <% in_finished_at = data.finished_at %>
+                <% in_ck_tomorrow_kintai = data.ck_tomorrow_kintai %>
+                <% in_note = data.note %>
+                <% in_employee_number = data.employee_number %>
+              <% end %>
+              <% in_flg = true %>
+            <% end %>
+            <!-- 画面構築 -->
             <tr>
+              <!-- 日付 -->
               <td><%= l(day.worked_on, format: :short) %></td>
+              <!-- 曜日 -->
               <% if day.worked_on.wday == 0 %>
                 <td class="txt-youbi-sun">
               <% elsif day.worked_on.wday == 6 %>
@@ -34,41 +73,74 @@
                 <td>
               <% end %>
               <%= $days_of_the_week[day.worked_on.wday] %></td>
-              
+              <!-- 出社時間、帰社時間、翌日チェックボックス、在社時間 -->
               <% if change_check(@info_change, day.worked_on) %>
-                  <!-- 勤怠変更申請中である場合、入力項目非活性化制御 -->
-                  <td><%= attendance.time_field :started_at, readonly: true, class: "form-control" %></td>
-                  <td><%= attendance.time_field :finished_at, readonly: true, class: "form-control" %></td>              
-                  <td><%= attendance.check_box :ck_tomorrow_kintai, disabled: true %></td>
-                  <td>
-                    <% if day.started_at.present? && day.finished_at.present? %>
-                      <%= working_times(day.started_at, day.finished_at) %>
-                    <% end %>
-                  </td>
-                  <td><%= attendance.text_field :note, readonly: true, class: "form-control" %></td>
-                  <td><%= change_superior_name(@info_change, day.worked_on, @user_superior) %>へ申請中</td>          
+              <!-- 勤怠変更申請中である場合、入力項目非活性化制御 -->
+                <td><%= attendance.time_field :started_at, readonly: true, class: "form-control" %></td>
+                <td><%= attendance.time_field :finished_at, readonly: true, class: "form-control" %></td>              
+                <td><%= attendance.check_box :ck_tomorrow_kintai, disabled: true %></td>
+                <td>
+                <% if day.started_at.present? && day.finished_at.present? %>
+                <!-- 出社時間、帰社時間の両方入力があった場合、在社時間を設定 -->
+                  <%= working_times(day.started_at, day.finished_at) %>
+                <% end %>
+                </td>
+                <td><%= attendance.text_field :note, readonly: true, class: "form-control" %></td>
+                <td><%= change_superior_name(@info_change, day.worked_on, @user_superior) %>へ申請中</td>          
               <% else %>
-                <!-- 勤怠変更申請中でない場合、入力項目活性化制御 -->
+              <!-- 勤怠変更申請中でない場合、入力項目活性化制御 -->
                 <% if Date.current < day.worked_on %>
+                <!-- 実在日より未来の場合、入力項目非活性化制御 -->
                   <td><%= attendance.time_field :started_at, readonly: true, class: "form-control" %></td>
                   <td><%= attendance.time_field :finished_at, readonly: true, class: "form-control" %></td>
                   <td><%= attendance.check_box :ck_tomorrow_kintai, disabled: true %></td>
                 <% else %>
-                  <td><%= attendance.time_field :started_at, class: "form-control" %></td>
-                  <td><%= attendance.time_field :finished_at, class: "form-control" %></td>
-                  <td><%= attendance.check_box :ck_tomorrow_kintai %></td>
+                <!-- 実在日含め過去の場合、入力項目活性化制御 -->
+                  <% if in_flg %>
+                  <!-- 勤怠変更申請で入力エラーとなった場合、申請時の入力値で設定 -->
+                    <td><%= attendance.time_field :started_at, value: in_started_at, class: "form-control" %></td>
+                    <td><%= attendance.time_field :finished_at, value: in_finished_at, class: "form-control" %></td>
+                    <% ck_tomorrow_flg = false %>
+                    <% ck_tomorrow_flg = true if in_ck_tomorrow_kintai == "1" %>
+                    <td><%= attendance.check_box :ck_tomorrow_kintai, :as => :boolean, checked:ck_tomorrow_flg %></td>
+                  <% else %>
+                  <!-- 勤怠変更申請対象データでない場合、DBのデータで設定 -->
+                    <td><%= attendance.time_field :started_at, class: "form-control" %></td>
+                    <td><%= attendance.time_field :finished_at, class: "form-control" %></td>
+                    <td><%= attendance.check_box :ck_tomorrow_kintai %></td>
+                  <% end %>                  
                 <% end %>
                 <td>
+                <% if in_flg %>
+                <!-- 勤怠変更申請で入力エラーとなった場合、申請時の入力値で設定 -->
+                  <% if in_started_at.present? && in_finished_at.present? %>
+                  <!-- 出社時間、帰社時間の両方入力があった場合、在社時間を設定 -->
+                    <%= working_hhmm(day.worked_on, in_started_at, in_finished_at, in_ck_tomorrow_kintai) %>
+                  <% end %>
+                <% else %>
+                <!-- 勤怠変更申請対象データでない場合、DBのデータで設定 -->
                   <% if day.started_at.present? && day.finished_at.present? %>
+                  <!-- 出社時間、帰社時間の両方入力があった場合、在社時間を設定 -->
                     <%= working_times(day.started_at, day.finished_at) %>
                   <% end %>
+                <% end %>
                 </td>
+                <!-- 備考、指示者確認 -->
                 <% if Date.current < day.worked_on %>
+                <!-- 実在日より未来の場合、入力項目非活性化制御 -->
                   <td><%= attendance.text_field :note, readonly: true, class: "form-control" %></td>
                   <td><%= attendance.select :employee_number, {}, {}, :disabled => true %></td>
                 <% else %>
-                  <td><%= attendance.text_field :note, class: "form-control" %></td>
-                  <td><%= attendance.select :employee_number, options_for_select(@user_superior,1), include_blank: true %></td>
+                <!-- 実在日含め過去の場合、入力項目活性化制御 -->
+                  <% if in_flg %>
+                  <!-- 勤怠変更申請で入力エラーとなった場合、申請時の入力値で設定 -->
+                    <td><%= attendance.text_field :note, value: in_note, class: "form-control" %></td>
+                    <td><%= attendance.select :employee_number, options_for_select(@user_superior,in_employee_number), include_blank: true %></td>
+                  <% else %>
+                  <!-- 勤怠変更申請対象データでない場合、DBのデータで設定 -->
+                    <td><%= attendance.text_field :note, class: "form-control" %></td>
+                    <td><%= attendance.select :employee_number, options_for_select(@user_superior,1), include_blank: true %></td>
+                  <% end %>
                 <% end %>
               <% end %>              
             </tr>

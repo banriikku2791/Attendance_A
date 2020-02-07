@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20191121111250) do
+ActiveRecord::Schema.define(version: 20200207144057) do
 
   create_table "attendance_changes", force: :cascade do |t|
     t.date "worked_on"
@@ -29,6 +29,8 @@ ActiveRecord::Schema.define(version: 20191121111250) do
     t.integer "attendance_id"
     t.datetime "deleted_at"
     t.boolean "deleted_flg", default: false
+    t.string "before_note"
+    t.string "before_ck_tomorrow_kintai"
     t.index ["attendance_id"], name: "index_attendance_changes_on_attendance_id"
     t.index ["user_id"], name: "index_attendance_changes_on_user_id"
   end
@@ -90,6 +92,20 @@ ActiveRecord::Schema.define(version: 20191121111250) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "gameninfos", force: :cascade do |t|
+    t.integer "keyid"
+    t.date "worked_on"
+    t.string "started_at"
+    t.string "finished_at"
+    t.string "ck_tomorrow_kintai"
+    t.string "note"
+    t.string "employee_number"
+    t.string "normal_msg"
+    t.string "error_msg"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "name"
     t.string "email"
@@ -99,8 +115,8 @@ ActiveRecord::Schema.define(version: 20191121111250) do
     t.string "remember_digest"
     t.boolean "admin", default: false
     t.string "affiliation"
-    t.datetime "basic_time", default: "2020-01-31 23:00:00"
-    t.datetime "work_time", default: "2020-01-31 22:30:00"
+    t.datetime "basic_time", default: "2020-02-02 23:00:00"
+    t.datetime "work_time", default: "2020-02-02 22:30:00"
     t.boolean "superior", default: false
     t.string "designated_work_start_time", default: "0800"
     t.string "designated_work_end_time", default: "1700"

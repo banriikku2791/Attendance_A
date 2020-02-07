@@ -219,7 +219,7 @@ module UsersHelper
   # 第２引数：オブジェクト（Attendanceテーブルの１レコード取得分情報）
   # 戻り値　：～申請中、～承認済、～否認といった文字列
   def shiji_info(kbn,obj)
-
+    
     # 初期値
     output = ""
     wk_output = ""
@@ -262,7 +262,6 @@ module UsersHelper
         end
       end
     end
-
     # 出力内容の編集
     if wk_request == "1"
       wk_output = employee_name + "へ" + wk_output + "申請中"

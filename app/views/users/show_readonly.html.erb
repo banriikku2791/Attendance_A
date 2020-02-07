@@ -6,8 +6,8 @@
       <td>
         　<%= l(@first_day, format: :middle) %>　時間管理表　
       </td>
-      <td>指定勤務開始時間　<%= format_basic_info(@user.work_time) %><br>指定勤務終了時間　<%= format_basic_info(@user.work_time) %></td>
-      <td colspan="3">基本時間　<%= format_basic_info(@user.basic_time) %></td>
+      <td>指定勤務開始時間　<%= format_worktime(1, @user.designated_work_start_time) %><br>指定勤務終了時間　<%= format_worktime(2, @user.designated_work_end_time) %></td>
+      <td colspan="3">基本時間　<%= format_basictime(@user.basic_work_time) %></td>
       <td>初日　<%= l(@first_day_m, format: :short_0) %></td>
     </tr>
     <tr>
@@ -80,9 +80,27 @@
           <td><%= day.note %></td>
           <td><%= day.end_at.slice(0..1) if day.end_at.present? %></td>
           <td><%= day.end_at.slice(2..3) if day.end_at.present? %></td>
-          <td></td>
+          <td>
+            <% if day.end_at.present? %>
+              <%= working_overtimes(day.worked_on, day.end_at, day.finished_at, day.ck_tomorrow) %>
+            <% end %>
+          </td>
           <td><%= day.reason %></td>
-          <td></td>
+          <% @msg_zan = shiji_info(1,day) %>
+          <% @msg_color_zan = @color %>
+          <% @msg_kin = shiji_info(2,day) %>
+          <% @msg_color_kin = @color %>
+          <% if @msg_zan.present? %>
+            <% if @msg_kin.present? %>
+              <td><font color=<%= @msg_color_zan %>><%= raw(nl2br(@msg_zan)) %></font><br><font color=<%= @msg_color_kin %>><%= raw(nl2br(@msg_kin)) %></font></td>
+            <% else %>
+              <td><font color=<%= @msg_color_zan %>><%= raw(nl2br(@msg_zan)) %></font></td>
+            <% end %>
+          <% elsif @msg_kin.present? %>
+            <td><font color=<%= @msg_color_kin %>><%= raw(nl2br(@msg_kin)) %></font></td>
+          <% else %>
+            <td></td>
+          <% end %>
         </tr>
       <% end %>
     </tbody>

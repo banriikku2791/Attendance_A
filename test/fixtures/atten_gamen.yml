@@ -1,0 +1,19 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  keyid: 1
+  worked_on: 2020-02-06
+  started_at: MyString
+  finished_at: MyString
+  ck_tomorrow_kintai: MyString
+  note: MyString
+  employee_number: MyString
+
+two:
+  keyid: 1
+  worked_on: 2020-02-06
+  started_at: MyString
+  finished_at: MyString
+  ck_tomorrow_kintai: MyString
+  note: MyString
+  employee_number: MyString

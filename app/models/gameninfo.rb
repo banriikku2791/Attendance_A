@@ -1,0 +1,2 @@
+class Gameninfo < ApplicationRecord
+end

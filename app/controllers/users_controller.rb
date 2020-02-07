@@ -5,11 +5,11 @@ class UsersController < ApplicationController
   
   before_action :correct_user, only: [:show, :edit]
   before_action :un_admin_user, only: [:show]
-    
-  before_action :admin_user, only: [:index, :update, :destroy, :edit_basic_info, :update_basic_info, :edit_basic_all, :update_basic_all]
+  before_action :admin_user, only: [:index, :destroy, :edit_basic_info, :update_basic_info, :edit_basic_all, :update_basic_all, :update_all]
 
   before_action :set_one_month_or_week, only: [:show]
   before_action :set_one_month_or_week_2, only: [:show_readonly]
+  before_action :gamen_ini, only: [:show]
 
   # before_action :set_user, only: [:show, :edit, :update, :destroy, :edit_basic_info, :update_basic_info, :edit_basic_all, :update_basic_all, :update_all]
   # before_action :logged_in_user, only: [:index, :edit, :update, :destroy, :edit_basic_info, :update_basic_info, :edit_basic_all, :update_basic_all, :update_all]
@@ -127,9 +127,11 @@ class UsersController < ApplicationController
   end
 
   def edit
+    # puts "---------user_edit------------"
   end
 
   def update
+    # puts "---------user_update------------"
     if @user.update_attributes(user_params)
       flash[:success] = "ユーザー情報を更新しました。"
       redirect_to @user
