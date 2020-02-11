@@ -12,7 +12,7 @@ class UsersController < ApplicationController
   def index
     if params[:key] == "1"
       # 管理者以外のユーザを取得
-      tmp_user = User.where(admin: false)
+      tmp_user = User.where(admin: false).order('employee_number')
       @users = tmp_user.paginate(page: params[:page])
       page_cnt = 0
       unless params[:page].blank?
