@@ -668,7 +668,7 @@ class AttendancesController < ApplicationController
     # 勤怠変更承認済みデータを日付の昇順でソート
     atten_ymd = AttendanceChange.where(deleted_flg: false, 
                                            request: "2",
-                                           user_id: params[:id]).group(:worked_on).order(:worked_on)
+                                           user_id: params[:id]).select(:worked_on).group(:worked_on).order(:worked_on)
     @log_y = {}
     cnt_y = 0
     @log_m = {}
