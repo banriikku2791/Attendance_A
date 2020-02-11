@@ -66,7 +66,7 @@
       <div class="modal-footer-custom">
         <div class="center">
           <%= f.submit yield(:button_text), class: "btn btn-primary btn-#{yield(:class_text)}" %>
-          <%= link_to "閉じる", current_user, class: "btn btn-primary btn-#{yield(:class_text)}" %>
+          <%= f.submit "閉じる", class: "btn btn-primary btn-#{yield(:class_text)}" %>
         </div>
       </div>
     <% end %>

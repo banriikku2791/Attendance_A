@@ -2,22 +2,12 @@ class UsersController < ApplicationController
 
   before_action :set_user,       only: [:show, :edit, :update, :destroy, :edit_basic_info, :update_basic_info, :edit_basic_all, :update_basic_all, :update_all]
   before_action :logged_in_user, only: [:index, :show, :edit, :create, :update, :destroy, :edit_basic_info, :update_basic_info, :edit_basic_all, :update_basic_all, :update_all]
-  
   before_action :correct_user, only: [:show, :edit]
   before_action :un_admin_user, only: [:show]
   before_action :admin_user, only: [:index, :destroy, :edit_basic_info, :update_basic_info, :edit_basic_all, :update_basic_all, :update_all]
-
   before_action :set_one_month_or_week, only: [:show]
   before_action :set_one_month_or_week_2, only: [:show_readonly]
   before_action :gamen_ini, only: [:show]
-
-  # before_action :set_user, only: [:show, :edit, :update, :destroy, :edit_basic_info, :update_basic_info, :edit_basic_all, :update_basic_all, :update_all]
-  # before_action :logged_in_user, only: [:index, :edit, :update, :destroy, :edit_basic_info, :update_basic_info, :edit_basic_all, :update_basic_all, :update_all]
-  # before_action :correct_user, only: [:edit, :update]
-  # before_action :admin_or_correct_user, only: [:index]
-  # before_action :admin_user, only: [:index, :destroy, :edit_basic_info, :update_basic_info, :edit_basic_all, :update_basic_all]
-  # before_action :set_one_month_or_week, only: [:show]
-  # before_action :set_one_month_or_week_2, only: [:show_readonly]
 
   def index
     if params[:key] == "1"
@@ -33,28 +23,20 @@ class UsersController < ApplicationController
       if page_cnt >= 2
         @start_no = (page_cnt - 1) * 30
       end
-      puts "page"
-      puts params[:page]
-      puts @start_no
-      puts @users.all.count
-      
-      # @users = User.paginate(admin: false, page: params[:page])
+      # puts "page"
+      # puts params[:page]
+      # puts @start_no
+      # puts @users.all.count
     elsif params[:key] == "2"
-    #  user_kinmu = Attendance.joins(:users)
-    #                        .where.not(started_at: nil)
-    #                         .select("users.id AS user_id, users.name AS user_name, users.employee_number AS user_number")
-    #user_kinmu = Users.all
       user_kinmu = User.where(id: Attendance.where.not(started_at: nil).where(worked_on: Date.current).select(:user_id))
       @users = user_kinmu.paginate(page: params[:page])
       @users_cnt = User.where(id: Attendance.where.not(started_at: nil).where(worked_on: Date.current).select(:user_id)).count
-      # puts @users_cnt
     end
   end
 
   def show
     # 選択月の中で、出社時間が未登録の件数を取得
     @worked_sum = @attendances_m.where.not(started_at: nil).count
-
     # 上長に依頼されている各種申請件数(1:所属長承認申請,2:勤怠変更申請,3:残業申請)
     @info_cnt_0 = {}
     @info_cnt_1 = {}
@@ -67,9 +49,6 @@ class UsersController < ApplicationController
         # 所属長承認申請状況
         val0 = AttendanceFix.where(superior_employee_number: @user.employee_number, request: "1").count
         val1 = AttendanceFix.where(user_id: @user.id, request: "1").count
-        #val3 = AttendanceFix.where(user_id: @user.id, request: "3").count
-        # wk1_val3 = AttendanceFix.where(user_id: @user.id, request: "1").count # 指定月に申請中の有無
-        # wk2_val3 = AttendanceFix.where(user_id: @user.id, request: "3").count # 指定月に否認の有無
         wk_val3 = AttendanceFix.where(user_id: @user.id).select('id, worked_on, request, MAX(created_at)').group(:worked_on).order('worked_on DESC')
         wk_cnt = 0
         wk_val3.each do |cnt3|
@@ -97,14 +76,12 @@ class UsersController < ApplicationController
       @info_cnt_1[n] = val1
       @info_cnt_3[n] = val3
     end
-
     # 上長選択用編集処理(アクセスユーザー本人は除く（上長権限保有していた場合）)
     user_s = User.where(superior: true).where.not(id: @user.id)
     @user_superior = {}
     user_s.each do |u|
       @user_superior[u.name] = u.employee_number
     end
-
   end
 
   def show_readonly
@@ -195,8 +172,6 @@ class UsersController < ApplicationController
       flash[:success] = "#{registered_count}件のユーザー情報を登録しました。"
     end
     redirect_to users_path(key: 1)
-    # redirect_to users_path
-    # redirect_to users_path, notice: "#{registered_count}件登録しました"
   end
 
   private
@@ -226,11 +201,6 @@ class UsersController < ApplicationController
       #debugger
       # windowsで作られたファイルに対応するので、encoding: "SJIS"を付けている
       CSV.foreach(params[:file_data].path, headers: true, encoding: "SJIS") do |row|
-        
-        #bwt = ck_time(row["basic_work_time"])
-        #dwst = ck_time(row["designated_work_start_time"])
-        #dwet = ck_time(row["designated_work_end_time"])
-        
         datas << ::User.new({ 
           name: row["name"],
           email: row["email"],
@@ -257,33 +227,33 @@ class UsersController < ApplicationController
     def ck_time(time)
       set_time = "00:00"
       tikan_time = time.to_s.delete(":")
-      puts "入力値" + time.to_s
-      puts "----------tikan_time-----------"
-      puts tikan_time
+      # puts "入力値" + time.to_s
+      # puts "----------tikan_time-----------"
+      # puts tikan_time
       # 数値判定
       if tikan_time =~ /^[0-9]+$/
-        puts "----------数値チェック通過-----------"
+        # puts "----------数値チェック通過-----------"
         len_time = tikan_time.size
         if len_time <= 4
           if len_time == 1
-            puts "----------len-1-----------"
+            # puts "----------len-1-----------"
             set_time = "00:0" + tikan_time
           elsif len_time == 2
-            puts "----------len-2-----------"
+            # puts "----------len-2-----------"
             if tikan_time.to_i < 60
               set_time = "00:" + tikan_time
             else
               # 初期値を返却("00:00")
             end
           elsif len_time == 3
-            puts "----------len-3-----------"
+            # puts "----------len-3-----------"
             if tikan_time.slice(1,2).to_i < 60
               set_time = "0" + tikan_time.slice(0,1) + ":" + tikan_time.slice(1,2)
             else
               # 初期値を返却("00:00")
             end
           elsif len_time == 4
-            puts "----------len-4-----------"
+            # puts "----------len-4-----------"
             if tikan_time.slice(0,2).to_i < 24 && tikan_time.slice(2,2).to_i < 60
               set_time = tikan_time.slice(0,2) + ":" + tikan_time.slice(2,2)
             else

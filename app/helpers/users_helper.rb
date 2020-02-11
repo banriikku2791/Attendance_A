@@ -39,7 +39,6 @@ module UsersHelper
     else
       tmp_h = time.slice(0,2).to_i
       tmp_m = time.slice(3,2).to_i
-      
       tmp_hm = format("%.2f", ((tmp_h * 60) + tmp_m) / 60.0)
       set_time = tmp_hm.to_s
     end
@@ -47,11 +46,6 @@ module UsersHelper
   end
 
   def ck_fix_hantei
-    #puts "ck----------------------------hantei"
-    #puts @cnt_fix
-    #puts @req_fix
-    #puts @name_fix
-    
     if @cnt_fix != 0 && @req_fix == "1"
       return @name_fix + "へ申請中"
     elsif @cnt_fix == 0 && @req_fix == "2"
@@ -219,7 +213,6 @@ module UsersHelper
   # 第２引数：オブジェクト（Attendanceテーブルの１レコード取得分情報）
   # 戻り値　：～申請中、～承認済、～否認といった文字列
   def shiji_info(kbn,obj)
-    
     # 初期値
     output = ""
     wk_output = ""
@@ -228,7 +221,6 @@ module UsersHelper
     wk_request = ""
     employee_num = 0
     employee_name = ""
-
     if kbn == 1
       # 残業申請状況確認
       wk_output = "残業"
@@ -275,22 +267,17 @@ module UsersHelper
     else
       wk_output = ""
     end
-
     # 出力内容のリターン
     output = wk_output 
     @color = wk_color
     return output    
-
   end
-
-
 
   def nl2br(str)
     h(str).gsub(/\R/, "<br>")
   end
 
   def time_change(data)
-    # puts data
     return "08:00"
   end
 

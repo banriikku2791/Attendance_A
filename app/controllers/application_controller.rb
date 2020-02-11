@@ -32,30 +32,28 @@ class ApplicationController < ActionController::Base
 
   # アクセスしたユーザーが現在ログインしているユーザーか確認します。
   def correct_user
-    puts "-----------------correct_user------------------"
-    puts current_user?(@user)
+    # puts "-----------------correct_user------------------"
+    # puts current_user?(@user)
     unless current_user?(@user)
       flash[:danger] = "参照および編集権限がありません。（ログインユーザーではない）"
       redirect_to(root_url)
-    end  
-    # redirect_to(root_url) unless current_user?(@user)
+    end
   end
 
   # システム管理権限所有かどうか判定します。
   def admin_user
-    puts "-----------------admin_user------------------"
-    puts current_user.admin?
+    # puts "-----------------admin_user------------------"
+    # puts current_user.admin?
     unless current_user.admin?
       flash[:danger] = "参照および編集権限がありません。（管理者権限なし）"
       redirect_to(root_url)
     end
-    # redirect_to root_url unless current_user.admin?
   end
 
   # システム管理権限所有者でないことを判定します。
   def un_admin_user
-    puts "-----------------un_admin_user------------------"
-    puts current_user.admin?
+    # puts "-----------------un_admin_user------------------"
+    # puts current_user.admin?
     if current_user.admin?
       flash[:danger] = "参照および編集権限がありません。（管理者権限あり）"
       redirect_to(root_url)
@@ -64,9 +62,9 @@ class ApplicationController < ActionController::Base
 
   # 管理権限者、または現在ログインしているユーザーを許可します。
   def admin_or_correct_user
-    puts "-----------------admin_or_correct_user------------------"
-    puts current_user?(@user)
-    puts current_user.admin?
+    # puts "-----------------admin_or_correct_user------------------"
+    # puts current_user?(@user)
+    # puts current_user.admin?
     unless current_user?(@user) || current_user.admin?
       flash[:danger] = "参照および編集権限がありません。"
       redirect_to(root_url)
@@ -101,22 +99,13 @@ class ApplicationController < ActionController::Base
     
     # 勤怠変更申請中の有無
     @cnt_change = AttendanceChange.where(user_id: params[:id], worked_on: @first_day_m..@last_day_m, request: "1").count
-    # puts "Cnt_change"
-    # puts @cnt_change
     @info_change = AttendanceChange.where(user_id: params[:id], worked_on: @first_day_m..@last_day_m, request: "1")
-
     # 残業申請中の有無
     @cnt_end = AttendanceEnd.where(user_id: params[:id], worked_on: @first_day_m..@last_day_m, request: "1").count
-    # puts "Cnt_end"
-    # puts @cnt_end
     @info_end = AttendanceEnd.where(user_id: params[:id], worked_on: @first_day_m..@last_day_m, request: "1")
-
     # 締め処理有無
     @cnt_fix = AttendanceFix.where(user_id: params[:id], worked_on: @first_day_m, request: "1").count
-    # puts "Cnt_fix"
-    # puts @cnt_fix
-    
-#    puts "@cnt_fix:" + @cnt_fix.to_s 
+
     @name_fix = ""
     @req_fix = ""
     name_num = 0
@@ -125,12 +114,12 @@ class ApplicationController < ActionController::Base
       attendanceFix_r.each do |ar|
         @req_fix = ar.request
       end
-#puts "@req_fix:" + @req_fix
+      # puts "@req_fix:" + @req_fix
       attendanceFix_num = AttendanceFix.where(user_id: params[:id], worked_on: @first_day_m).select(:superior_employee_number).limit(1).order('created_at DESC')
       attendanceFix_num.each do |anum|
         name_num = anum.superior_employee_number
       end
-#puts "name_num:" + name_num.to_s 
+      # puts "name_num:" + name_num.to_s 
       user_name = User.where(employee_number: name_num).select(:name).limit(1) 
       user_name.each do |un|
         @name_fix = un.name
@@ -144,14 +133,11 @@ class ApplicationController < ActionController::Base
       attendanceFix_num.each do |anum|
         name_num = anum.superior_employee_number
       end
-#puts "name_num:" + name_num.to_s 
+      # puts "name_num:" + name_num.to_s 
       user_name = User.where(employee_number: name_num).select(:name).limit(1) 
       user_name.each do |un|
         @name_fix = un.name
       end
-
-      
-#puts "@name_fix:" + @name_fix 
     end
     
     # 編集当日の該当月
@@ -180,7 +166,48 @@ class ApplicationController < ActionController::Base
 
   # ページ出力前に1ヶ月分または１週間分のデータ存在確認と存在しないデータは作成しセットします。
   def set_one_month_or_week_2
+
+    if params[:chenge_mw] == "w" # 週指定の場合
+      @first_day = params[:date].nil? ?
+      Date.current.beginning_of_week : params[:date].to_date
+      @last_day = @first_day.end_of_week
+      @first_day_m = params[:date].nil? ?
+      Date.current.beginning_of_month : params[:date].to_date.beginning_of_month
+      @last_day_m = @first_day_m.end_of_month
+      @select_area = "w"
+    else # 月指定の場合
+      @first_day = params[:date].nil? ?
+      Date.current.beginning_of_month : params[:date].to_date.beginning_of_month
+      @last_day = @first_day.end_of_month
+      @first_day_m = @first_day
+      @last_day_m = @last_day
+      @select_area = "m"
+    end
+
+    # 締め処理有無
+    @name_fix = ""
+    @req_fix = ""
+    name_num = 0
     
+    # 申請有無
+    @cnt_fix = AttendanceFix.where(user_id: params[:user_id], worked_on: @first_day_m, request: "1").count
+    
+    # 承認状況取得
+    attendanceFix_r = AttendanceFix.where(user_id: params[:user_id], worked_on: @first_day_m).select(:request).limit(1).order('created_at DESC')
+    attendanceFix_r.each do |ar|
+      @req_fix = ar.request
+    end
+    
+    # 上長名取得
+    attendanceFix_num = AttendanceFix.where(user_id: params[:user_id], worked_on: @first_day_m).select(:superior_employee_number).limit(1).order('created_at DESC')
+    attendanceFix_num.each do |anum|
+      name_num = anum.superior_employee_number
+    end
+    user_name = User.where(employee_number: name_num).select(:name).limit(1) 
+    user_name.each do |un|
+      @name_fix = un.name
+    end
+
     @user = User.find(params[:user_id])
     
     @first_day = params[:date].nil? ?
@@ -234,7 +261,6 @@ class ApplicationController < ActionController::Base
   def date_change(w_day, t_day, ck_sf, ck_to)
     if t_day.present?
       str_d = w_day.year.to_s + format('%02d', w_day.month) + format('%02d', w_day.day) + t_day.slice(0..1) + t_day.slice(3..4) + "00" 
-      # puts str_d
       if ck_sf == "f" && ck_to == "1"
         return Time.zone.parse(str_d) + 86400
       else
@@ -244,7 +270,6 @@ class ApplicationController < ActionController::Base
       return nil
     end
   end
-  
 
   def date_change2(w_day, t_day, ck_sf, ck_to, flg)
     if t_day.present?
@@ -253,7 +278,6 @@ class ApplicationController < ActionController::Base
       else
         str_d = w_day.year.to_s + format('%02d', w_day.month) + format('%02d', w_day.day) + t_day + "00" 
       end
-      # puts str_d
       if ck_sf == "f" && ck_to == "1"
         return Time.zone.parse(str_d) + 86400
       else
@@ -266,11 +290,8 @@ class ApplicationController < ActionController::Base
 
   # attendances_helperにもあるのを補正 exportで使用 controller側でコールできないため
   def working_times_at(start, finish)
-    
     unless start.nil? || finish.nil?
-
       w_times = (((finish - start) / 60) / 60.0) - ((finish - start) / 60).div(60)
-      
       if w_times >= 0 && w_times < 0.25
         format("%.2f", ((((finish - start) / 60).div(60))))
       elsif w_times >= 0.25 && w_times < 0.50
@@ -283,16 +304,12 @@ class ApplicationController < ActionController::Base
     else
       return nil
     end
-
   end
   
   def set_times_at(targetDay)
-    
     setday = targetDay.nil? ?
     targetDay : I18n.l(targetDay, format: :time_h) + ":" + working_minutes_at(targetDay)
-    
     return setday
-
   end
 
   # attendances_helperにもあるのを補正 exportで使用 controller側でコールできないため

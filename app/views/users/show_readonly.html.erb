@@ -117,7 +117,20 @@
         <td colspan="1"></td>
         <td colspan="1"></td>
         <td colspan="1"></td>
-        <td colspan="1">所属長承認　<%= ck_fix_hantei %></td>
+        <td colspan="1">
+          所属長承認　
+          <% if @req_fix.present? %>
+            <% if @req_fix == "1" %>
+              <font color="green"><%= ck_fix_hantei %></font>
+            <% elsif @req_fix == "2" %>
+              <font color="blue"><%= ck_fix_hantei %></font>
+            <% elsif @req_fix == "3" %>
+              <font color="red"><%= ck_fix_hantei %></font>
+            <% end %>
+          <% else %>
+            <%= ck_fix_hantei %>
+          <% end %>
+        </td>
       </tr>
     </tfoot>    
   </table>
