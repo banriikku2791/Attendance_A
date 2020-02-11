@@ -49,7 +49,8 @@ class UsersController < ApplicationController
         # 所属長承認申請状況
         val0 = AttendanceFix.where(superior_employee_number: @user.employee_number, request: "1").count
         val1 = AttendanceFix.where(user_id: @user.id, request: "1").count
-        wk_val3 = AttendanceFix.where(user_id: @user.id).select('id, worked_on, request, MAX(created_at)').group(:worked_on).order('worked_on DESC')
+        # wk_val3 = AttendanceFix.where(user_id: @user.id).select('id, worked_on, request, MAX(created_at)').group(:worked_on).order('worked_on DESC')
+        wk_val3 = AttendanceFix.where(user_id: @user.id).select('worked_on, request, MAX(created_at)').group(:worked_on).order('worked_on DESC')
         wk_cnt = 0
         wk_val3.each do |cnt3|
           if cnt3.request == "3"
