@@ -202,14 +202,13 @@ class UsersController < ApplicationController
 
     def import_files
       require 'csv'
-      # 登録処理前のレコード数
-      puts params[:file_data].content_type
       datas = []
       if params[:file_data].present?
         if params[:file_data].original_filename && 
          File.extname(params[:file_data].original_filename) == ".csv" # パラメータのoriginal_filenameでチェック
           # 例外を捕捉してエラーが起きないようにする
           begin
+            # 登録処理前のレコード数
             current_file_row_count = ::User.count
             # windowsで作られたファイルに対応するので、encoding: "SJIS"を付けている
             CSV.foreach(params[:file_data].path, headers: true, encoding: "SJIS") do |row|
