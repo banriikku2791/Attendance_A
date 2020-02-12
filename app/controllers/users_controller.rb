@@ -169,6 +169,12 @@ class UsersController < ApplicationController
     registered_count = import_files
     if registered_count == 0
       flash[:info] = "選択したファイルに登録可能なユーザー情報は存在しませんでした。"
+    elsif registered_count == -1
+      flash[:info] = "ファイルが選択されていません。"
+    elsif registered_count == -2
+      flash[:info] = "選択したファイルがCSV形式ではありません。"
+    elsif registered_count <= -3
+      flash[:danger] = "ファイルインポート処理に失敗しました。"
     else
       flash[:success] = "#{registered_count}件のユーザー情報を登録しました。"
     end
@@ -197,28 +203,43 @@ class UsersController < ApplicationController
     def import_files
       require 'csv'
       # 登録処理前のレコード数
-      current_file_row_count = ::User.count
+      puts params[:file_data].content_type
       datas = []
-      #debugger
-      # windowsで作られたファイルに対応するので、encoding: "SJIS"を付けている
-      CSV.foreach(params[:file_data].path, headers: true, encoding: "SJIS") do |row|
-        datas << ::User.new({ 
-          name: row["name"],
-          email: row["email"],
-          affiliation: row["affiliation"],
-          employee_number: row["employee_number"],
-          uid: row["uid"], 
-          basic_work_time: ck_time(row["basic_work_time"]),
-          designated_work_start_time: ck_time(row["designated_work_start_time"]),
-          designated_work_end_time: ck_time(row["designated_work_end_time"]),
-          superior: ck_Bool(row["superior"]),
-          admin: ck_Bool(row["admin"]),
-          password: row["password"]})
+      if params[:file_data].present?
+        if params[:file_data].original_filename && 
+         File.extname(params[:file_data].original_filename) == ".csv" # パラメータのoriginal_filenameでチェック
+          # 例外を捕捉してエラーが起きないようにする
+          begin
+            current_file_row_count = ::User.count
+            # windowsで作られたファイルに対応するので、encoding: "SJIS"を付けている
+            CSV.foreach(params[:file_data].path, headers: true, encoding: "SJIS") do |row|
+              datas << ::User.new({ 
+                name: row["name"],
+                email: row["email"],
+                affiliation: row["affiliation"],
+                employee_number: row["employee_number"],
+                uid: row["uid"], 
+                basic_work_time: ck_time(row["basic_work_time"]),
+                designated_work_start_time: ck_time(row["designated_work_start_time"]),
+                designated_work_end_time: ck_time(row["designated_work_end_time"]),
+                superior: ck_Bool(row["superior"]),
+                admin: ck_Bool(row["admin"]),
+                password: row["password"]})
+            end
+            # importメソッドでバルクインサートできる
+            ::User.import(datas)
+            # 何レコード登録できたかを返す
+            ::User.count - current_file_row_count
+          rescue # 例外
+            # 特別な後片付けは必要なさそうなので、そのまま。
+            # エラーの種類が特定できるなら、rescueの引数で切り分けてメッセージをflashに入れるとかのOK
+          end
+        else
+          return -2
+        end
+      else
+        return -1
       end
-      # importメソッドでバルクインサートできる
-      ::User.import(datas)
-      # 何レコード登録できたかを返す
-      ::User.count - current_file_row_count
     end
 
     # 時間形式チェック
