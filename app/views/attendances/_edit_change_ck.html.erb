@@ -59,14 +59,14 @@
                             <td>
                           <% end %>
                           <%= $days_of_the_week[ac.worked_on.wday] %></td>
-                          <td><%= l(ac.before_started_at, format: :time_h) if ac.before_started_at.present? %></td>
+                          <td><%= working_hours(ac.before_started_at) if ac.before_started_at.present? %></td>
                           <td><%= working_minutes(ac.before_started_at) if ac.before_started_at.present? %></td>
-                          <td><%= l(ac.before_finished_at, format: :time_h) if ac.before_finished_at.present? %></td>
-                          <td><%= working_minutes(ac.before_finished_at) if ac.before_finished_at.present? %></td>
-                          <td><%= l(ac.after_started_at, format: :time_h) if ac.after_started_at.present? %></td>
+                          <td><%= working_hours2(ac.before_started_at, ac.before_finished_at) if ac.before_started_at.present? && ac.before_finished_at.present? %></td>
+                          <td><%= working_minutes2(ac.before_started_at, ac.before_finished_at) if ac.before_started_at.present? && ac.before_finished_at.present? %></td>
+                          <td><%= working_hours(ac.after_started_at) if ac.after_started_at.present? %></td>
                           <td><%= working_minutes(ac.after_started_at) if ac.after_started_at.present? %></td>
-                          <td><%= l(ac.after_finished_at, format: :time_h) if ac.after_finished_at.present? %></td>
-                          <td><%= working_minutes(ac.after_finished_at) if ac.after_finished_at.present? %></td>
+                          <td><%= working_hours2(ac.after_started_at, ac.after_finished_at) if ac.after_started_at.present? && ac.after_finished_at.present? %></td>
+                          <td><%= working_minutes2(ac.after_started_at, ac.after_finished_at) if ac.after_started_at.present? && ac.after_finished_at.present? %></td>
                           <td><%= ac.note %></td>
                           <td><%= a_change.select :request ,options_for_select(@req_sec,1) %></td>
                           <td><%= a_change.check_box 'ck_change' %></td>
