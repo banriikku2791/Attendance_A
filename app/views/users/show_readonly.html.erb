@@ -63,26 +63,27 @@
             <td>
           <% end %>
           <%= $days_of_the_week[day.worked_on.wday] %></td>
-          <td><%= l(day.started_at, format: :time_h) if day.started_at.present? %></td>
+          <td><%= working_hours(day.started_at) if day.started_at.present? %></td>
           <td><%= working_minutes(day.started_at) if day.started_at.present? %></td>
           <td>
           </td>
-          <td><%= l(day.finished_at, format: :time_h) if day.finished_at.present? %></td>
-          <td><%= working_minutes(day.finished_at) if day.finished_at.present? %></td>
+          <td><%= working_hours2(day.started_at, day.finished_at)  if day.started_at.present? && day.finished_at.present? %></td>
+          <td><%= working_minutes2(day.started_at, day.finished_at) if day.started_at.present? && day.finished_at.present? %></td>
           <td>
           </td>
           <td>
             <% if day.started_at.present? && day.finished_at.present? %>
-              <%= str_times = working_times(day.started_at, day.finished_at) %>
+              <%= str_times = working_times2(day.started_at, day.finished_at) %>
               <% @total_working_times = @total_working_times.to_f + str_times.to_f %>
             <% end %>
           </td>
           <td><%= day.note %></td>
-          <td><%= day.end_at.slice(0..1) if day.end_at.present? %></td>
-          <td><%= day.end_at.slice(2..3) if day.end_at.present? %></td>
+          <td><%= working_hours3(day.worked_on, day.end_at, day.ck_tomorrow, day.started_at, day.finished_at)  if day.end_at.present? %></td>
+          <td><%= working_minutes3(day.worked_on, day.end_at, day.ck_tomorrow, day.started_at, day.finished_at) if day.end_at.present? %></td>
           <td>
             <% if day.end_at.present? %>
-              <%= working_overtimes(day.worked_on, day.end_at, day.finished_at, day.ck_tomorrow) %>
+              <%= str_times = working_overtimes3(day.worked_on, day.end_at, day.ck_tomorrow, day.started_at, day.finished_at) %>
+              <% @total_working_times = @total_working_times.to_f + str_times.to_f %>
             <% end %>
           </td>
           <td><%= day.reason %></td>

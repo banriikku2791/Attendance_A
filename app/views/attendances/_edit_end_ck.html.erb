@@ -45,10 +45,18 @@
                             <td>
                           <% end %>
                           <%= $days_of_the_week[ae.worked_on.wday] %></td>
-                          <td><%= ae.end_at.slice(0..1) + ":"+ ae.end_at.slice(2..3) if ae.end_at.present? %></td>
-                          <td><%= @user.designated_work_end_time %></td>
-                          <% # atten = Attendance.find_by(user_id: ue.user_id, worked_on: ae.worked_on) %>
-                          <td><%= working_overtimes2(ae.worked_on, ae.end_at, @user.designated_work_end_time, ae.tomorrow_flg) %></td>
+                          <% wk_flg = "0" %>
+                          <% wk_flg = "1" if ae.tomorrow_flg %>
+                          <% atten = Attendance.where(user_id: ue.user_id, worked_on: ae.worked_on).limit(1) %>
+                          <% atten.each do |awk| %>
+                            <td>
+                              <%= working_hours3(ae.worked_on, ae.end_at, wk_flg, awk.started_at, awk.finished_at)  +
+                              ":" + 
+                              working_minutes3(ae.worked_on, ae.end_at, wk_flg, awk.started_at, awk.finished_at) if ae.end_at.present? %>
+                            </td>
+                            <td><%= @user.designated_work_end_time %></td>
+                            <td><%= working_overtimes3(ae.worked_on, ae.end_at, wk_flg, awk.started_at, awk.finished_at) %></td>
+                          <% end %>
                           <td><%= ae.reason %></td>
                           <td><%= a_end.select :request ,options_for_select(@req_sec,1) %></td>
                           <td><%= a_end.check_box 'ck_change' %></td>

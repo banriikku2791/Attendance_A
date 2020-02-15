@@ -121,7 +121,7 @@
                 <!-- 勤怠変更申請対象データでない場合、DBのデータで設定 -->
                   <% if day.started_at.present? && day.finished_at.present? %>
                   <!-- 出社時間、帰社時間の両方入力があった場合、在社時間を設定 -->
-                    <%= working_times(day.started_at, day.finished_at) %>
+                    <%= working_times2(day.started_at, day.finished_at) %>
                   <% end %>
                 <% end %>
                 </td>

@@ -550,7 +550,7 @@ class AttendancesController < ApplicationController
   def edit_end_ck
     @user = User.find(params[:id])
     @attendance_end = AttendanceEnd.where(superior_employee_number: current_user.employee_number, request: "1").order("worked_on DESC, user_id ASC")
-    @user_end = AttendanceEnd.where(superior_employee_number: current_user.employee_number, request: "1").group(:user_id).order(:user_id)
+    @user_end = AttendanceEnd.where(superior_employee_number: current_user.employee_number, request: "1").select(:user_id).group(:user_id).order(:user_id)
     @req_sec = { :"なし" => "0", :"申請中" => "1", :"承認" => "2", :"否認" => "3" }
     @first_day = params[:date]
     @select_area = params[:chenge_mw]
@@ -602,7 +602,7 @@ class AttendancesController < ApplicationController
   def edit_change_ck
     @user = User.find(params[:id])
     @attendance_change = AttendanceChange.where(superior_employee_number: current_user.employee_number, request: "1").order("worked_on DESC, user_id ASC")
-    @user_change = AttendanceChange.where(superior_employee_number: current_user.employee_number, request: "1").group(:user_id).order(:user_id)
+    @user_change = AttendanceChange.where(superior_employee_number: current_user.employee_number, request: "1").select(:user_id).group(:user_id).order(:user_id)
     @req_sec = { :"なし" => "0", :"申請中" => "1", :"承認" => "2", :"否認" => "3" }
     @first_day = params[:date]
     @select_area = params[:chenge_mw]
@@ -773,7 +773,7 @@ class AttendancesController < ApplicationController
   def edit_fix_ck
     @user = User.find(params[:id])
     @attendance_fix = AttendanceFix.where(superior_employee_number: current_user.employee_number, request: "1").order("worked_on DESC, user_id ASC")
-    @user_fix = AttendanceFix.where(superior_employee_number: current_user.employee_number, request: "1").group(:user_id).order(:user_id)
+    @user_fix = AttendanceFix.where(superior_employee_number: current_user.employee_number, request: "1").select(:user_id).group(:user_id).order(:user_id)
     @req_sec = { :"なし" => "0", :"申請中" => "1", :"承認" => "2", :"否認" => "3" }
     @first_day = params[:date]
     @select_area = params[:chenge_mw]
