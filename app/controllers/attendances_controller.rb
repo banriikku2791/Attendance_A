@@ -140,9 +140,7 @@ class AttendancesController < ApplicationController
               if attendance.ck_tomorrow == "1"
                 wk_a_end_at += 86400
               end
-              puts "wk_a_end_at-2"
             end
-            puts "wk_a_end_at-3"
             # 出社時間 < 退社時間であることのチェック
             if wk_a_started_at <= wk_a_finished_at
               # 変更前のDB情報
@@ -185,7 +183,7 @@ class AttendancesController < ApplicationController
                       if wk_a_finished_at < wk_prev_finished_at
                         # puts "入力した出社時間が前日の申請データの退社時間より過去1"
                         @error_msg = "\n 【日付：" + l(attendance.worked_on, format: :short) + 
-                          "】入力した出社時間が、前日の申請データの退社時間より過去であったため、申請をキャンセルしました。1"
+                          "】入力した出社時間が、前日の申請データの退社時間より過去であったため、申請をキャンセルしました。"
                         atten_gamen.update_attributes!(error_msg: @error_msg)
                         error_flg = true
                         tmp_cnt_2 += 1                      
@@ -208,7 +206,7 @@ class AttendancesController < ApplicationController
                       if wk_a_started_at <= attendance_yes.finished_at # (2)
                         # puts "入力した出社時間が前日の退社時間より過去2" # エラー処理へ
                         @error_msg = "\n 【日付：" + l(attendance.worked_on, format: :short) + 
-                          "】入力した出社時間が、前日の退社時間より過去であったため、申請をキャンセルしました。2"
+                          "】入力した出社時間が、前日の退社時間と同じまたは前日の退社時間より過去であったため、申請をキャンセルしました。"
                         atten_gamen.update_attributes!(error_msg: @error_msg)
                         error_flg = true
                         tmp_cnt_2 += 1
@@ -219,13 +217,11 @@ class AttendancesController < ApplicationController
                           # 日付チェック２（変更後の出社時間が前日の終了予定時間より過去となっていないか）
                           # 終了予定日(end_at)を文字列型から日付型に変換
                           wk_end_at = date_change2(attendance_yes.worked_on, attendance_yes.end_at, "f", attendance_yes.ck_tomorrow, false)
-                          puts "前日の終了予定時間と当日の出社時間の比較"
-                          puts wk_a_started_at
-                          puts wk_end_at
+                          # puts "前日の終了予定時間と当日の出社時間の比較"
                           if wk_a_started_at <= wk_end_at # (4)
                             # puts "入力した出社時間が前日の終了予定時間より過去3" # エラー処理へ
                             @error_msg = "\n 【日付：" + l(attendance.worked_on, format: :short) +
-                              "】入力した出社時間が、前日の終了予定時間より過去であったため、申請をキャンセルしました。3"
+                              "】入力した出社時間が、前日の終了予定時間と同じまたは前日の終了予定時間より過去であったため、申請をキャンセルしました。"
                             atten_gamen.update_attributes!(error_msg: @error_msg)
                             error_flg = true
                             tmp_cnt_2 += 1
@@ -241,7 +237,7 @@ class AttendancesController < ApplicationController
                         if wk_a_started_at < wk_prev_finished_at
                           # puts "入力した出社時間が前日の申請データの退社時間より過去4"
                           @error_msg = "\n 【日付：" + l(attendance.worked_on, format: :short) +
-                            "】入力した出社時間が、前日の申請データの退社時間より過去であったため、申請をキャンセルしました。4"
+                            "】入力した出社時間が、前日の申請データの退社時間より過去であったため、申請をキャンセルしました。"
                           atten_gamen.update_attributes!(error_msg: @error_msg)
                           error_flg = true
                           tmp_cnt_2 += 1                      
@@ -287,7 +283,7 @@ class AttendancesController < ApplicationController
                           if wk_a_finished_at >= wk_next_started_at
                             # puts "入力した退社時間が翌日分申請の出社時間より未来5" # エラー処理へ
                             @error_msg = "\n 【日付：" + l(attendance.worked_on, format: :short) +
-                              "】入力した退社時間が、翌日分申請の出社時間より未来であったため、申請をキャンセルしました。5"
+                              "】入力した退社時間が、翌日分申請の出社時間と同じまたは翌日分申請の出社時間より未来であったため、申請をキャンセルしました。"
                             atten_gamen.update_attributes!(error_msg: @error_msg)
                             error_flg = true
                             tmp_cnt_2 += 1
@@ -302,7 +298,7 @@ class AttendancesController < ApplicationController
                               if wk_a_finished_at >= wk_next_started_at
                                 # puts "入力した退社時間が翌日分申請の出社時間より未来6" # エラー処理へ
                                 @error_msg = "\n 【日付：" + l(attendance.worked_on, format: :short) +
-                                  "】入力した退社時間が、翌日分申請の出社時間より未来であったため、申請をキャンセルしました。6"
+                                  "】入力した退社時間が、翌日分申請の出社時間と同じまたは翌日分申請の出社時間より未来であったため、申請をキャンセルしました。"
                                 atten_gamen.update_attributes!(error_msg: @error_msg)
                                 error_flg = true
                                 tmp_cnt_2 += 1
@@ -313,7 +309,7 @@ class AttendancesController < ApplicationController
                               if wk_a_finished_at >= attendance_tom.started_at
                                 # puts "入力した退社時間が翌日の出社時間より未来7" # エラー処理へ
                                 @error_msg = "\n 【日付：" + l(attendance.worked_on, format: :short) +
-                                  "】入力した退社時間が、翌日の出社時間より未来であったため、申請をキャンセルしました。7"
+                                  "】入力した退社時間が、翌日の出社時間と同じまたは翌日の出社時間より未来であったため、申請をキャンセルしました。"
                                 atten_gamen.update_attributes!(error_msg: @error_msg)
                                 error_flg = true
                                 tmp_cnt_2 += 1
@@ -325,7 +321,7 @@ class AttendancesController < ApplicationController
                             if wk_a_finished_at >= wk_next_started_at
                               # puts "入力した退社時間が翌日分申請の出社時間より未来8" # エラー処理へ
                               @error_msg = "\n 【日付：" + l(attendance.worked_on, format: :short) +
-                                "】入力した退社時間が、翌日分申請の出社時間より未来であったため、申請をキャンセルしました。8"
+                                "】入力した退社時間が、翌日分申請の出社時間と同じまたは翌日分申請の出社時間より未来であったため、申請をキャンセルしました。"
                               atten_gamen.update_attributes!(error_msg: @error_msg)
                               error_flg = true
                               tmp_cnt_2 += 1
@@ -344,7 +340,7 @@ class AttendancesController < ApplicationController
                             if wk_a_finished_at >= attendance_tom.started_at
                               # puts "入力した退社時間が翌日の出社時間より未来9" # エラー処理へ
                               @error_msg = "\n 【日付：" + l(attendance.worked_on, format: :short) +
-                                "】入力した退社時間が、翌日の出社時間より未来であったため、申請をキャンセルしました。9"
+                                "】入力した退社時間が、翌日の出社時間と同じまたは翌日の出社時間より未来であったため、申請をキャンセルしました。"
                               atten_gamen.update_attributes!(error_msg: @error_msg)
                               error_flg = true
                               tmp_cnt_2 += 1
@@ -486,7 +482,7 @@ class AttendancesController < ApplicationController
       # 日付チェック
       if wk_finished_at >= wk_end_at
         # puts "終了予定時間が退社時間より過去" # エラー処理へ
-        error_msg = "入力した終了予定時間が、当日の退社時間より過去であった為、残業申請をキャンセルしました。"
+        error_msg = "入力した終了予定時間が、当日の退社時間と同じまたは当日の退社時間より過去であった為、残業申請をキャンセルしました。"
         error_flg = true
       end
     end
@@ -502,7 +498,7 @@ class AttendancesController < ApplicationController
         # 日付チェック
         if attendance_to.started_at <= wk_end_at
           # puts "終了予定時間が翌日の出社時間より未来" # エラー処理へ
-          error_msg = "入力した終了予定時間が、翌日の出社時間より未来であった為、残業申請をキャンセルしました。"
+          error_msg = "入力した終了予定時間が、翌日の出社時間と同じまたは翌日の出社時間より未来であった為、残業申請をキャンセルしました。"
           error_flg = true
         end
       else
@@ -613,15 +609,19 @@ class AttendancesController < ApplicationController
     @select_area = params[:chenge_mw]
     # 閉じるボタンを押下された場合は処理しない。
     if params[:commit] != "閉じる"
-      #件数のカウント
-      tmp_cnt = 0
+      # 勤怠変更と残業申請が同時申請され否認した場合のメッセージ編集用変数
+      tmp_meg = nil
+      tmp_meg_userid = 0
+      tmp_meg_flg = false
+      tmp_cnt = 0 # 件数のカウント
       ActiveRecord::Base.transaction do # トランザクションを開始します。
         attendances_params3.each do |id|
           if params[:user][:attendance_changes][id][:ck_change] == "1"
             attendance_change = AttendanceChange.find(id)
+            wk_user = User.find(attendance_change.user_id)
             attendance = Attendance.find(attendance_change.attendance_id)
-            if params[:user][:attendance_changes][id][:request] == "0" || params[:user][:attendance_changes][id][:request] == "3" 
-              # なし、否認の場合、申請前の情報で更新する
+            if params[:user][:attendance_changes][id][:request] == "0"
+              # なしの場合、申請前の情報で更新する
               # 変更前情報で更新
               attendance.update_attributes!(
                 started_at: attendance_change.before_started_at ,
@@ -637,12 +637,76 @@ class AttendancesController < ApplicationController
                                             confirm_at: Time.current)
               attendance.update_attributes!(request_change: params[:user][:attendance_changes][id][:request])
               tmp_cnt += 1
+            elsif params[:user][:attendance_changes][id][:request] == "3"
+              # 否認の場合、並行して残業申請を行っていた場合、勤怠変更内容に対する残業申請なので、
+              # 残業申請を否認として処理し、勤怠変更分は申請前の情報で更新する
+              atten_e_cnt = AttendanceEnd.where(user_id: attendance_change.user_id,
+                                                request: "1",
+                                                worked_on: attendance_change.worked_on).count
+              
+              if atten_e_cnt > 0
+                atten_e = AttendanceEnd.where(user_id: attendance_change.user_id,
+                                              request: "1",
+                                              worked_on: attendance_change.worked_on).limit(1)
+                
+                atten_e.each do |ae|
+                  # 変更前情報で更新
+                  attendance.update_attributes!(
+                    started_at: attendance_change.before_started_at ,
+                    finished_at: attendance_change.before_finished_at ,
+                    note: attendance_change.before_note ,
+                    end_at: ae.before_end_at, # 残業申請分
+                    reason: ae.before_reason, # 残業申請分
+                    request_change: params[:user][:attendance_changes][id][:request],
+                    request_end: params[:user][:attendance_changes][id][:request], # 残業申請分
+                    ck_tomorrow: ae.tomorrow_flg_before ? "1" : "0", # 残業申請分
+                    ck_tomorrow_kintai: attendance_change.before_ck_tomorrow_kintai)
+                  attendance_change.update_attributes!(request: params[:user][:attendance_changes][id][:request],
+                                                confirm_at: Time.current)
+                  attendance_end = AttendanceEnd.find(ae.id) # 残業申請分
+                  attendance_end.update_attributes!(request: "3", confirm_at: Time.current) # 残業申請分
+                end
+                if tmp_meg_userid != wk_user.id
+                  if tmp_meg_flg
+                    tmp_meg += "<br>"
+                  end
+                  if tmp_meg.present?
+                    tmp_meg += wk_user.name
+                  else
+                    tmp_meg = wk_user.name
+                  end
+                  tmp_meg += "："
+                  tmp_meg += l(attendance_change.worked_on, format: :default) 
+                else
+                  tmp_meg += "、"
+                  tmp_meg += l(attendance_change.worked_on, format: :default)  
+                end
+                tmp_meg_userid = wk_user.id
+                tmp_meg_flg = true
+              else
+                # 変更前情報で更新
+                attendance.update_attributes!(
+                  started_at: attendance_change.before_started_at ,
+                  finished_at: attendance_change.before_finished_at ,
+                  note: attendance_change.before_note ,
+                  request_change: params[:user][:attendance_changes][id][:request],
+                  ck_tomorrow_kintai: attendance_change.before_ck_tomorrow_kintai)
+                attendance_change.update_attributes!(request: params[:user][:attendance_changes][id][:request],
+                                              confirm_at: Time.current)
+              end
+              tmp_cnt += 1
             end
           end
         end
       end
       if tmp_cnt == 0
         flash[:info] = "変更項目にチェックした箇所がなかったため、勤怠変更申請の更新は実施しませんでした。"
+      elsif tmp_meg_flg
+        flash[:success] = "勤怠変更申請を更新しました。<br>
+                          また、更新した申請で否認とした勤怠変更申請の中で同一日に残業申請されていたものがあったため、
+                          当該の残業申請も同時に否認の更新を実行しました。<br>
+                          （勤怠変更申請内容を元に残業申請を行っているため）<br>
+                          <<該当申請>><br>" + tmp_meg
       else
         flash[:success] = "勤怠変更申請を更新しました。"
       end
@@ -880,13 +944,13 @@ class AttendancesController < ApplicationController
         end
       end
       if @fday_s.kind_of?(Date)
-        puts "------------------Date"
+        # puts "------------------Date"
       elsif @fday_s.kind_of?(Time)
-        puts "------------------Time"
+        # puts "------------------Time"
       elsif @fday_s.kind_of?(DateTime)
-        puts "------------------DateTime"
+        # puts "------------------DateTime"
       elsif @fday_s.kind_of?(String)
-        puts "------------------String"
+        # puts "------------------String"
       end
       send_data(csv_date,filename: @fday_s.slice(0..6) + "_attendances_" + Time.current.strftime("%Y%m%d%H%M%S") + ".csv")
     end
