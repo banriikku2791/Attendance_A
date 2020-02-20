@@ -154,24 +154,24 @@
                   <tr>
                     <td><%= w_today %></td>
                     <td>
-                      <%= l(w_b_start_day, format: :time_h) +
-                        ":" +
-                        working_minutes(w_b_start_day) if w_b_start_day.present? %>
+                      <%= working_hours(w_b_start_day) if w_b_start_day.present? %>
+                      <%= ":" if w_b_start_day.present? %>
+                      <%= working_minutes(w_b_start_day) if w_b_start_day.present? %>
                     </td>
                     <td>
-                      <%= l(w_b_finish_day, format: :time_h) +
-                        ":" +
-                        working_minutes(w_b_finish_day) if w_b_finish_day.present? %>
+                      <%= working_hours2(w_b_start_day, w_b_finish_day) if w_b_start_day.present? && w_b_finish_day.present? %>
+                      <%= ":" if w_b_start_day.present? && w_b_finish_day.present? %>
+                      <%= working_minutes2(w_b_start_day, w_b_finish_day) if w_b_start_day.present? && w_b_finish_day.present? %>
                     </td>
                     <td>
-                      <%= l(w_a_start_day, format: :time_h) +
-                        ":" +
-                        working_minutes(w_a_start_day) if w_a_start_day.present? %>
+                      <%= working_hours(w_a_start_day) if w_a_start_day.present? %>
+                      <%= ":" if w_a_start_day.present? %>
+                      <%= working_minutes(w_a_start_day) if w_a_start_day.present? %>
                     </td>
                     <td>
-                      <%= l(w_a_finish_day, format: :time_h) +
-                        ":" +
-                        working_minutes(w_a_finish_day) if w_a_finish_day.present? %>
+                      <%= working_hours2(w_a_start_day, w_a_finish_day) if w_a_start_day.present? && w_a_finish_day.present? %>
+                      <%= ":" if w_a_start_day.present? && w_a_finish_day.present? %>
+                      <%= working_minutes2(w_a_start_day, w_a_finish_day) if w_a_start_day.present? && w_a_finish_day.present? %>
                     </td>
                     <% @user_superior = User.where(employee_number: w_superior_num) %>
                     <% @user_superior.each do |us| %>
@@ -194,24 +194,24 @@
                   <tr>
                     <td><%= w_today %></td>
                     <td>
-                      <%= l(w_b_start_day, format: :time_h) +
-                        ":" +
-                        working_minutes(w_b_start_day) if w_b_start_day.present? %>
+                      <%= working_hours(w_b_start_day) if w_b_start_day.present? %>
+                      <%= ":" if w_b_start_day.present? %>
+                      <%= working_minutes(w_b_start_day) if w_b_start_day.present? %>
                     </td>
                     <td>
-                      <%= l(w_b_finish_day, format: :time_h) +
-                        ":" +
-                        working_minutes(w_b_finish_day) if w_b_finish_day.present? %>
+                      <%= working_hours2(w_b_start_day, w_b_finish_day) if w_b_start_day.present? && w_b_finish_day.present? %>
+                      <%= ":" if w_b_start_day.present? && w_b_finish_day.present? %>
+                      <%= working_minutes2(w_b_start_day, w_b_finish_day) if w_b_start_day.present? && w_b_finish_day.present? %>
                     </td>
                     <td>
-                      <%= l(w_a_start_day, format: :time_h) +
-                        ":" +
-                        working_minutes(w_a_start_day) if w_a_start_day.present? %>
+                      <%= working_hours(w_a_start_day) if w_a_start_day.present? %>
+                      <%= ":" if w_a_start_day.present? %>
+                      <%= working_minutes(w_a_start_day) if w_a_start_day.present? %>
                     </td>
                     <td>
-                      <%= l(w_a_finish_day, format: :time_h) +
-                        ":" +
-                        working_minutes(w_a_finish_day) if w_a_finish_day.present? %>
+                      <%= working_hours2(w_a_start_day, w_a_finish_day) if w_a_start_day.present? && w_a_finish_day.present? %>
+                      <%= ":" if w_a_start_day.present? && w_a_finish_day.present? %>
+                      <%= working_minutes2(w_a_start_day, w_a_finish_day) if w_a_start_day.present? && w_a_finish_day.present? %>
                     </td>
                     <% @user_superior = User.where(employee_number: w_superior_num) %>
                     <% @user_superior.each do |us| %>
@@ -220,9 +220,7 @@
                     <td><%= l(w_confirm_day, format: :long_b) %></td>
                   </tr>
                 <% end %>
-  
                 <% w_o_today = w_n_today %>
-  
               <% end %>
             </tbody>
           </table>

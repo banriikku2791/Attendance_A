@@ -78,6 +78,8 @@
     <% else %>
       <button type="button" class="btn btn-primary" disabled>勤怠を編集</button>
     <% end %>
+  <% else %>
+    <button type="button" class="btn btn-primary" disabled>勤怠を編集</button>
   <% end %>
   <%= link_to "CSV出力", export_path(format: :csv, id: @user.id, fday: @first_day_m, lday: @last_day_m) , class: "btn btn-primary" %>
   <%= link_to "勤怠修正ログ（承認済）", attendances_edit_change_log_user_path(@user, select_day: @first_day, gamen: "m", chenge_mw: @select_area), remote: true, class: "btn btn-primary" %>
@@ -176,10 +178,10 @@
             <% end %>
           </td>
           <td><%= day.note %></td>
-          <td><%= working_hours3(day.worked_on, day.end_at, day.ck_tomorrow, day.started_at, day.finished_at)  if day.end_at.present? %></td>
-          <td><%= working_minutes3(day.worked_on, day.end_at, day.ck_tomorrow, day.started_at, day.finished_at) if day.end_at.present? %></td>
+          <td><%= working_hours3(day.worked_on, day.end_at, day.ck_tomorrow, day.started_at, day.finished_at)  if day.end_at.present? && day.finished_at.present? %></td>
+          <td><%= working_minutes3(day.worked_on, day.end_at, day.ck_tomorrow, day.started_at, day.finished_at) if day.end_at.present? && day.finished_at.present? %></td>
           <td>
-            <% if day.end_at.present? %>
+            <% if day.end_at.present? && day.finished_at.present? %>
               <%= str_times = working_overtimes3(day.worked_on, day.end_at, day.ck_tomorrow, day.started_at, day.finished_at) %>
               <% @total_working_times = @total_working_times.to_f + str_times.to_f %>
             <% end %>

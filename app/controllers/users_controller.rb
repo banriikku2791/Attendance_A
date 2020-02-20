@@ -1,7 +1,7 @@
 class UsersController < ApplicationController
 
   before_action :set_user,       only: [:show, :edit, :update, :destroy, :edit_basic_info, :update_basic_info, :edit_basic_all, :update_basic_all, :update_all]
-  before_action :logged_in_user, only: [:index, :show, :edit, :create, :update, :destroy, :edit_basic_info, :update_basic_info, :edit_basic_all, :update_basic_all, :update_all]
+  before_action :logged_in_user, only: [:index, :show, :edit, :update, :destroy, :edit_basic_info, :update_basic_info, :edit_basic_all, :update_basic_all, :update_all]
   before_action :correct_user, only: [:show, :edit]
   before_action :un_admin_user, only: [:show]
   before_action :admin_user, only: [:index, :destroy, :edit_basic_info, :update_basic_info, :edit_basic_all, :update_basic_all, :update_all]
@@ -94,14 +94,34 @@ class UsersController < ApplicationController
   end
 
   def create
-    @user = User.new(user_params)
-    if @user.save
-      log_in @user # 保存成功後、ログインします。
-      flash[:success] = '新規作成に成功しました。'
-      redirect_to @user
-    else
-      render :new
+    # ここに社員番号を自動設定する処理を追加
+    # その他、下記項目に初期値を設定する。
+    # designated_work_start_time
+    # designated_work_end_time
+    # basic_work_time
+    ActiveRecord::Base.transaction do # トランザクションを開始します。
+      # 最大の社員番号（数値であるため）を取得
+      user_emp_num = User.maximum(:employee_number)
+      # 新規ユーザー作成
+      @user = User.new(user_params)
+      # 足りない項目を更新
+      @user.update_attributes!(
+        employee_number: user_emp_num + 1 ,
+        basic_work_time: "08:00" ,
+        designated_work_start_time: "09:00" ,
+        designated_work_end_time: "17:00")
+      # コミットする
+      if @user.save
+        log_in @user # 保存成功後、ログインします。
+        flash[:success] = '新規作成に成功しました。'
+        redirect_to @user
+      else
+        render :new
+      end
     end
+  rescue ActiveRecord::RecordInvalid # トランザクションによるエラーの分岐です。
+    flash[:danger] = "無効な入力データがあった為、ユーザ登録をキャンセルしました。"
+    render :new
   end
 
   def edit
