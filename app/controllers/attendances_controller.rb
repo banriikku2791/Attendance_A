@@ -129,23 +129,51 @@ class AttendancesController < ApplicationController
             params[:user][:attendances][id][:note].present?
             # 変数設定
             wk_ck_tomorrow = params[:user][:attendances][id][:ck_tomorrow_kintai]
-            wk_a_started_at = date_change(attendance.worked_on, params[:user][:attendances][id][:started_at], "s", wk_ck_tomorrow)
-            wk_a_finished_at = date_change(attendance.worked_on, params[:user][:attendances][id][:finished_at], "f", wk_ck_tomorrow)
+            # wk_a_started_at = date_change(attendance.worked_on, params[:user][:attendances][id][:started_at], "s", wk_ck_tomorrow)
+            # wk_a_finished_at = date_change(attendance.worked_on, params[:user][:attendances][id][:finished_at], "f", wk_ck_tomorrow)
+            
+            wk_a_started_at = nil
+            wk_a_finished_at = nil
+            wk_a_started_at_ck = params[:user][:attendances][id][:started_at]
+            wk_a_finished_at_ck = params[:user][:attendances][id][:finished_at]
+            if wk_a_started_at_ck.present?
+              wk_a_started_at = working_start(attendance.worked_on, wk_a_started_at_ck, true)
+            end
+            if wk_a_started_at_ck.present? && wk_a_finished_at_ck.present?
+              wk_a_finished_at = working_finish(attendance.worked_on, wk_a_started_at_ck, wk_a_finished_at_ck, wk_ck_tomorrow, true)
+            end
             # 終了予定時間(設定されている状態は、申請中、承認済のものとして扱う。否認、なしで設定されている場合は終了予定時間には申請前の値が設定されていることが条件)
             wk_a_end_at = nil
+            
             if attendance.end_at.present?
-              wk_a_end_at = Time.zone.parse(attendance.worked_on.to_s + " " + attendance.end_at.slice(0,2) + ":" + attendance.end_at.slice(2,2) + ":00")
-              #wk_end_at = (params[:worked_on] + " " + params[:end_at_h] + ":" + params[:end_at_m] + ":00").to_time ← ZONEが効かない +0000となる
-              # 翌日にチェックしていた場合
-              if attendance.ck_tomorrow == "1"
-                wk_a_end_at += 86400
-              end
+              wk_a_end_at = working_yotei(attendance.worked_on,
+                                          attendance.end_at,
+                                          attendance.ck_tomorrow,
+                                          params[:user][:attendances][id][:started_at],
+                                          params[:user][:attendances][id][:finished_at],
+                                          wk_ck_tomorrow)
+            #   wk_a_end_at = Time.zone.parse(attendance.worked_on.to_s + " " + attendance.end_at.slice(0,2) + ":" + attendance.end_at.slice(2,2) + ":00")
+            #  #wk_end_at = (params[:worked_on] + " " + params[:end_at_h] + ":" + params[:end_at_m] + ":00").to_time ← ZONEが効かない +0000となる
+            #  # 翌日にチェックしていた場合
+            #  if attendance.ck_tomorrow == "1"
+            #    wk_a_end_at += 86400
+            #  end
             end
+            
             # 出社時間 < 退社時間であることのチェック
             if wk_a_started_at <= wk_a_finished_at
               # 変更前のDB情報
-              wk_b_started_at = attendance.started_at
-              wk_b_finished_at = attendance.finished_at
+              # wk_b_started_at = attendance.started_at
+              # wk_b_finished_at = attendance.finished_at
+              wk_b_started_at = nil
+              wk_b_finished_at = nil
+              if attendance.started_at.present?
+                wk_b_started_at = working_start(attendance.worked_on, attendance.started_at, false)
+              end
+              if attendance.started_at.present? &&attendance.finished_at.present?
+                wk_b_finished_at = working_finish(attendance.worked_on, attendance.started_at, attendance.finished_at, attendance.ck_tomorrow_kintai, false)
+              end
+
               wk_b_note = attendance.note
               wk_b_ck_tomorrow_kintai = attendance.ck_tomorrow_kintai
               # 同時入力時、該当日の翌日が勤怠変更対象の場合の入力情報
@@ -153,14 +181,29 @@ class AttendancesController < ApplicationController
               wk_next_started_at = nil
               # wk_next_finished_at = nil 未使用
               if gamen_input[next_cnt].present?
-                wk_next_started_at = date_change(attendance.worked_on + 1, params[:user][:attendances][gamen_input[next_cnt]][:started_at], "s", wk_ck_tomorrow)
-              # wk_next_finished_at = date_change(attendance.worked_on + 1, params[:user][:attendances][gamen_input[next_cnt]][:finished_at], "f", wk_ck_tomorrow)
+                # wk_next_started_at = date_change(attendance.worked_on + 1, params[:user][:attendances][gamen_input[next_cnt]][:started_at], "s", wk_ck_tomorrow)
+                # wk_next_finished_at = date_change(attendance.worked_on + 1, params[:user][:attendances][gamen_input[next_cnt]][:finished_at], "f", wk_ck_tomorrow)
+                wk_next_started_at = params[:user][:attendances][gamen_input[next_cnt]][:started_at]
+                if wk_next_started_at.present?
+                  wk_next_started_at = working_start(attendance.worked_on + 1, wk_next_started_at, true)
+                end
               end
               wk_prev_started_at = nil
               wk_prev_finished_at = nil
               if prev_cnt > 0
-                wk_prev_started_at = date_change(attendance.worked_on - 1, params[:user][:attendances][gamen_input[prev_cnt]][:started_at], "s", wk_ck_tomorrow)
-                wk_prev_finished_at = date_change(attendance.worked_on - 1, params[:user][:attendances][gamen_input[prev_cnt]][:finished_at], "f", wk_ck_tomorrow)
+                # wk_prev_started_at = date_change(attendance.worked_on - 1, params[:user][:attendances][gamen_input[prev_cnt]][:started_at], "s", wk_ck_tomorrow)
+                # wk_prev_finished_at = date_change(attendance.worked_on - 1, params[:user][:attendances][gamen_input[prev_cnt]][:finished_at], "f", wk_ck_tomorrow)
+                wk_prev_started_at_ck = params[:user][:attendances][gamen_input[prev_cnt]][:started_at]
+                wk_prev_finished_at_ck = params[:user][:attendances][gamen_input[prev_cnt]][:finished_at]
+                if wk_prev_started_at_ck.present?
+                  wk_prev_started_at = working_start(attendance.worked_on - 1, wk_prev_started_at_ck, true)
+                end
+                if wk_prev_started_at_ck.present? && wk_prev_finished_at_ck.present?
+                  wk_prev_finished_at = working_finish(attendance.worked_on - 1,
+                                                        wk_prev_started_at_ck,
+                                                        wk_prev_finished_at_ck,
+                                                        params[:user][:attendances][gamen_input[prev_cnt]][:ck_tomorrow_kintai], true)
+                end
               end
 
               # 変更有無確認チェック
@@ -173,6 +216,7 @@ class AttendancesController < ApplicationController
                 if wk_a_started_at != wk_b_started_at
                   # 変更対象日前日の退社時間と変更対象日前日の終了予定時間を取得する
                   attendance_yes = Attendance.find_by(user_id: attendance.user_id, worked_on: attendance.worked_on - 1)
+                  
                 
                   if attendance_yes.nil?
                     # puts "前日の既存データがない"
@@ -202,8 +246,16 @@ class AttendancesController < ApplicationController
                       #     ⇒終了予定時間が存在しない場合は、以降の処理はスルー
                       #       残業申請有無にかかわらず、設定されていれば有効とする
                       # (4) 変更後の出社時間が前日の終了予定時間より過去となっていないか
-  
-                      if wk_a_started_at <= attendance_yes.finished_at # (2)
+                      wk_yes_finished_at = nil
+                      if attendance_yes.started_at.present? && attendance_yes.finished_at.present?
+                        wk_yes_finished_at = working_finish(attendance_yes.worked_on,
+                                                            attendance_yes.started_at,
+                                                            attendance_yes.finished_at,
+                                                            attendance_yes.ck_tomorrow_kintai,
+                                                            false)
+                      end
+                      # if wk_a_started_at <= attendance_yes.finished_at # (2)
+                      if wk_yes_finished_at.present? && wk_a_started_at <= wk_yes_finished_at # (2)
                         # puts "入力した出社時間が前日の退社時間より過去2" # エラー処理へ
                         @error_msg = "\n 【日付：" + l(attendance.worked_on, format: :short) + 
                           "】入力した出社時間が、前日の退社時間と同じまたは前日の退社時間より過去であったため、申請をキャンセルしました。"
@@ -216,7 +268,13 @@ class AttendancesController < ApplicationController
                         if attendance_yes.end_at.present? # (3)
                           # 日付チェック２（変更後の出社時間が前日の終了予定時間より過去となっていないか）
                           # 終了予定日(end_at)を文字列型から日付型に変換
-                          wk_end_at = date_change2(attendance_yes.worked_on, attendance_yes.end_at, "f", attendance_yes.ck_tomorrow, false)
+                          # wk_end_at = date_change2(attendance_yes.worked_on, attendance_yes.end_at, "f", attendance_yes.ck_tomorrow, false)
+                          wk_end_at = working_yotei(attendance_yes.worked_on,
+                                                    attendance_yes.end_at,
+                                                    attendance_yes.ck_tomorrow,
+                                                    attendance_yes.started_at,
+                                                    attendance_yes.finished_at,
+                                                    attendance_yes.ck_tomorrow_kintai)
                           # puts "前日の終了予定時間と当日の出社時間の比較"
                           if wk_a_started_at <= wk_end_at # (4)
                             # puts "入力した出社時間が前日の終了予定時間より過去3" # エラー処理へ
@@ -273,6 +331,12 @@ class AttendancesController < ApplicationController
                     unless error_flg
                       # 翌日の出社日時を取得
                       attendance_tom = Attendance.find_by(user_id: attendance.user_id, worked_on: attendance.worked_on + 1)
+                      
+                      wk_tom_started_at = nil
+                      if attendance_tom.started_at.present?
+                        wk_tom_started_at = working_start(attendance_tom.worked_on,
+                                                          attendance_tom.started_at, false)
+                      end
                       # 同時に翌日に勤怠変更申請の有無
                       if wk_next_started_at.present?
                         # puts "翌日の申請データあり"
@@ -291,8 +355,9 @@ class AttendancesController < ApplicationController
                         else
                           if attendance_tom.started_at.present?
                             # puts attendance_tom.started_at
-                            # 翌日の申請データと登録済データを比較し変更有無を確認する                    
-                            if wk_next_started_at != attendance_tom.started_at
+                            # 翌日の申請データと登録済データを比較し変更有無を確認する
+                            # if wk_next_started_at != attendance_tom.started_at
+                            if wk_next_started_at != wk_tom_started_at
                               # puts "翌日のデータに差異あり"
                               # 日付チェック（変更後の退社時間が翌日の出社時間より未来となっていないか）
                               if wk_a_finished_at >= wk_next_started_at
@@ -306,7 +371,8 @@ class AttendancesController < ApplicationController
                             else
                               # puts "翌日のデータに差異なし"
                               # 日付チェック（変更後の退社時間が翌日の出社時間より未来となっていないか）
-                              if wk_a_finished_at >= attendance_tom.started_at
+                              # if wk_a_finished_at >= attendance_tom.started_at
+                              if wk_a_finished_at >= wk_tom_started_at
                                 # puts "入力した退社時間が翌日の出社時間より未来7" # エラー処理へ
                                 @error_msg = "\n 【日付：" + l(attendance.worked_on, format: :short) +
                                   "】入力した退社時間が、翌日の出社時間と同じまたは翌日の出社時間より未来であったため、申請をキャンセルしました。"
@@ -337,7 +403,8 @@ class AttendancesController < ApplicationController
                           if attendance_tom.started_at.present?
                             # puts attendance_tom.started_at
                             # 日付チェック（変更後の退社時間が翌日の出社時間より未来となっていないか）
-                            if wk_a_finished_at >= attendance_tom.started_at
+                            # if wk_a_finished_at >= attendance_tom.started_at
+                            if wk_a_finished_at >= wk_tom_started_at
                               # puts "入力した退社時間が翌日の出社時間より未来9" # エラー処理へ
                               @error_msg = "\n 【日付：" + l(attendance.worked_on, format: :short) +
                                 "】入力した退社時間が、翌日の出社時間と同じまたは翌日の出社時間より未来であったため、申請をキャンセルしました。"

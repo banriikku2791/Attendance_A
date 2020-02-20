@@ -312,7 +312,7 @@ class ApplicationController < ActionController::Base
     return setday
   end
 
-  # attendances_helperにもあるのを補正 exportで使用 controller側でコールできないため
+  # 以下、attendances_helperにもあるのを補正 exportで使用 controller側でコールできないため
   def working_minutes_at(target_min)
     w_min = l(target_min, format: :time_m).to_i
     if w_min >= 0 && w_min < 15
@@ -324,6 +324,130 @@ class ApplicationController < ActionController::Base
     else
       return "45"
     end
+  end
+  
+  # 15分刻みの時間に変換(出社時間用)
+  def working_time_rule_s(target_s)
+      w_hour = target_s.hour
+      w_min = target_s.min
+      w_flg = false
+      if w_min > 0 && w_min <= 15
+        w_min = 15
+      elsif w_min > 15 && w_min <= 30
+        w_min = 30
+      elsif w_min > 30 && w_min <= 45
+        w_min = 45
+      elsif w_min > 45 && w_min <= 60
+        w_min = 0
+        if w_hour == 23
+          w_hour = 0
+          w_flg = true
+        else
+          w_hour += 1
+        end
+      end
+      s_str = target_s.year.to_s + format('%02d', target_s.month) + format('%02d', target_s.day) +
+              format('%02d', w_hour) + format('%02d', w_min) + "00"
+      s_time = Time.zone.parse(s_str)
+      if w_flg
+        s_time += 86400
+      end
+      return s_time
+  end
+  
+  # 15分刻みの時間に変換(帰社時間用)
+  def working_time_rule_f(target_s, target_f, base_at, zan_at, ck_tomorrow_flg, zflg)
+      wk_s = nil
+      wk_f = nil
+      if zflg
+        dt = base_at
+        dt += 1 if ck_tomorrow_flg == "1"
+        dt_str = dt.year.to_s + format('%02d', dt.month) + format('%02d', dt.day) + zan_at + "00"
+        wk_f = Time.zone.parse(dt_str)
+        wk_s = target_f
+      else
+        wk_s = working_time_rule_s(target_s)
+        wk_f = target_f
+      end
+      if wk_s > wk_f
+        return working_time_rule_s(wk_f)
+      else
+        w_hour = wk_f.hour
+        w_min = wk_f.min
+        if w_min >= 0 && w_min < 15
+          w_min = 0
+        elsif w_min >= 15 && w_min < 30
+          w_min = 15
+        elsif w_min >= 30 && w_min < 45
+          w_min = 30
+        elsif w_min >= 45 && w_min < 60
+          w_min = 45
+        end
+        f_str = wk_f.year.to_s + format('%02d', wk_f.month) + format('%02d', wk_f.day) +
+                format('%02d', w_hour) + format('%02d', w_min) + "00"
+        f_time = Time.zone.parse(f_str)
+        return f_time
+      end
+  end
+
+  # 出社時間(15分刻み形式で返却) 手入力(input_flg = true)
+  def working_start(base_at, target_s, input_flg)
+    # puts "working_start"
+    # puts base_at
+    # puts target_s
+    tmp_time = nil 
+    if input_flg
+      str_time = base_at.year.to_s + format('%02d', base_at.month) + format('%02d', base_at.day) + target_s.slice(0..1) + target_s.slice(3..4) + "00"
+      tmp_time = Time.zone.parse(str_time)
+    else
+      tmp_time = target_s
+    end
+    wk_at = working_time_rule_s(tmp_time)
+    puts wk_at
+    return wk_at
+  end
+
+  # 退社時間(15分刻み形式で返却) 手入力(input_flg = true)
+  def working_finish(base_at, target_s, target_f, ck_to, input_flg)
+    # puts "working_finish"
+    # puts base_at
+    # puts target_s
+    # puts target_f
+    # puts ck_to
+    tmp_time_s = nil 
+    tmp_time_f = nil
+    if input_flg
+      str_time_s = base_at.year.to_s + format('%02d', base_at.month) + format('%02d', base_at.day) + target_s.slice(0..1) + target_s.slice(3..4) + "00"
+      tmp_time_s = Time.zone.parse(str_time_s)
+      str_time_f = base_at.year.to_s + format('%02d', base_at.month) + format('%02d', base_at.day) + target_f.slice(0..1) + target_f.slice(3..4) + "00"
+      tmp_time_f = nil
+      if ck_to == "1"
+        tmp_time_f = Time.zone.parse(str_time_f) + 86400
+      else
+        tmp_time_f = Time.zone.parse(str_time_f)
+      end
+    else
+      tmp_time_s = target_s
+      tmp_time_f = target_f
+    end
+    wk_at = working_time_rule_f(tmp_time_s, tmp_time_f, nil, nil, nil, false)
+    puts wk_at
+    return wk_at
+  end
+
+  # 終了予定時間(15分刻み形式で返却)
+  def working_yotei(base_at, zan_at, ck_tomorrow_flg, target_s, target_f, ck_to)
+    # puts "working_yotei"
+    # puts base_at
+    # puts zan_at
+    # puts ck_tomorrow_flg
+    # puts target_s
+    # puts target_f
+    # puts ck_to
+    tmp_time_f = working_finish(base_at, target_s, target_f, ck_to)
+    wk_at = working_time_rule_f(nil, tmp_time_f, base_at, zan_at, ck_tomorrow_flg, true)
+    puts wk_at
+    return wk_at
   end
   
 end

@@ -258,13 +258,15 @@ module AttendancesHelper
 
   # 終了予定時間（時）
   def working_hours3(base_at, zan_at, ck_tomorrow_flg, target_s, target_f)
-    wk_at = working_time_rule_f(target_s, target_f, base_at, zan_at, ck_tomorrow_flg, true)
+    tmp_time_f = working_time_rule_f(target_s, target_f, nil, nil, nil, false)
+    wk_at = working_time_rule_f(target_s, tmp_time_f, base_at, zan_at, ck_tomorrow_flg, true)
     return format('%02d', wk_at.hour)
   end
   
   # 終了予定時間（分）
   def working_minutes3(base_at, zan_at, ck_tomorrow_flg, target_s, target_f)
-    wk_at = working_time_rule_f(target_s, target_f, base_at, zan_at, ck_tomorrow_flg, true)
+    tmp_time_f = working_time_rule_f(target_s, target_f, nil, nil, nil, false)
+    wk_at = working_time_rule_f(target_s, tmp_time_f, base_at, zan_at, ck_tomorrow_flg, true)
     return format('%02d', wk_at.min)
   end
   
