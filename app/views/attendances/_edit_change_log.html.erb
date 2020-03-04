@@ -1,6 +1,6 @@
 <% provide(:class_text, 'atten-modal') %>
 <% provide(:title, '勤怠ログ') %>
-<% provide(:button_text1, 'リセット') %>
+<% provide(:button_text1, 'ログ削除') %>
 <% provide(:button_text2, '取得') %>
 <% provide(:no_data_message, '該当データありません') %>
 <div class="modal-dialog modal-lg modal-dialog-center">
@@ -24,7 +24,7 @@
                                                                      chenge_mw: @select_area),
                      method: :patch, remote: true) do |f1|
           %>
-            <%= f1.hidden_field :setday, :value => @w_cnt_y + @w_cnt_m + "01" %>
+            <%= f1.hidden_field :setday, :value => @w_cnt_ym + "01" %>
             <div class="info-message"></div>
             <div>
                 <%= f1.submit yield(:button_text1), class: "btn btn-primary btn-sm" %>
@@ -38,20 +38,15 @@
                                                                    gamen: "g"),
                      method: :get, remote: true) do |f2|
           %>
+          
             <%= f2.hidden_field :gamen, :value => "g" %>
             <div>
               <table class="table table-bordered table-condensed">
                 <tr>
-                  <td class="center">年</td>
+                  <td class="center">年月</td>
                   <td>
-                    <%= f2.select 'sec_year', 
-                    options_for_select(@log_y, @w_cnt_y), :onchange => 'set_item(this.value)' %>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="center">月</td>
-                  <td>
-                    <%= f2.select 'sec_month' ,options_for_select(@log_m, @w_cnt_m) %>
+                    <%= f2.select 'sec_ym', 
+                    options_for_select(@log_ym, @w_cnt_ym), :onchange => 'set_item(this.value)'%>
                     <%= f2.submit yield(:button_text2), class: "btn btn-primary btn-sm" %>
                   </td>
                 </tr>
@@ -64,6 +59,7 @@
         <div class="col-md-10 col-md-offset-1">
           <table class="table table-bordered table-condensed table-hover table-striped" id="table-attendances">
             <thead>
+              <%= @w_cnt_y %>年<%= @w_cnt_mm %>月分表示
               <tr>
                 <td>日付</td>
                 <td>変更前出社時間</td>
@@ -240,6 +236,6 @@
 <!--ファイルアップロード用スクリプト-->
 <script type="text/javascript">
   function set_item(select_val){
-    $('setday').value = select_val;
+    $('setday').value = select_val + '01';
   }
 </script>

@@ -788,6 +788,10 @@ class AttendancesController < ApplicationController
   def get_change_month
     render partial: 'select_month_change', locals: {id: params[:id]}
   end
+  
+  def call_ajax
+    puts params[:id]
+  end
 
   def edit_change_log
     # データ引継ぎ
@@ -800,72 +804,137 @@ class AttendancesController < ApplicationController
     atten_ymd = AttendanceChange.where(deleted_flg: false, 
                                            request: "2",
                                            user_id: params[:id]).select(:worked_on).group(:worked_on).order(:worked_on)
+    @log_ym = {}                                       
     @log_y = {}
-    cnt_y = 0
+    # cnt_y = 0
+    cnt_ym = 0
     @log_m = {}
-    w_y_a = "0"
-    w_y_b = "0"
+    # w_y_a = "0"
+    # w_y_b = "0"
     w_ym_a = "0"
     w_ym_b = "0"
-    w_y_hyouji = ""
-    w_y_hyouji_m = ""
-    w_y_genzai = "0"
+    # w_y_hyouji = ""
+    w_ym_hyouji = ""
+    # w_y_hyouji_m = ""
+    # w_y_genzai = "0"
+    w_ym_genzai = "0"
     @w_cnt_y = ""
     @w_cnt_m = ""
+    @w_cnt_mm = ""
+    @w_cnt_ym = ""
+    wk_gamen = ""
     # 年月プルダウンのデフォルト値
     # 親画面からの起動の場合、親画面で選択していた表示年を引継ぎ設定
-    if params[:gamen] == "m"
-      w_y_hyouji = params[:select_day].slice(0..3)
-      w_y_hyouji_m = params[:select_day]
-    elsif params[:gamen] == "s"
-      w_y_hyouji = params[:setday].slice(0..3)
-      w_y_hyouji_m = params[:setday]
-    elsif params[:gamen] == "r"
-      w_y_hyouji = ""
-      w_y_hyouji_m = ""
+    
+    wk_gamen = params[:gamen]
+    if wk_gamen.present?
+      if params[:gamen] == "m"
+      #  w_y_hyouji = params[:select_day].slice(0..3)
+      #  w_y_hyouji_m = params[:select_day]
+        # 勤怠表示画面（親）より呼び出された場合、親画面で表示されていた年月を設定
+        w_ym_hyouji = params[:select_day].slice(0..3) + params[:select_day].slice(5..6)
+      elsif params[:gamen] == "s"
+      #  w_y_hyouji = params[:setday].slice(0..3)
+      #  w_y_hyouji_m = params[:setday]
+        w_ym_hyouji = params[:setday]
+      elsif params[:gamen] == "r"
+      #  w_y_hyouji = ""
+      #  w_y_hyouji_m = ""
+        w_ym_hyouji = ""
+      end
     else
-      w_y_hyouji = params[:user][:sec_month].slice(0..3)
-      w_y_hyouji_m = params[:user][:sec_month].slice(0..3) + "-" + params[:user][:sec_month].slice(4..5) + "-01"
+    #  w_y_hyouji = params[:user][:sec_ym].slice(0..3)
+      # 勤怠ログ画面より選択された年月を設定
+      w_ym_hyouji = params[:user][:sec_ym]
+    # w_y_hyouji_m = params[:user][:sec_ym].slice(0..3) + "-" + params[:user][:sec_ym].slice(4..5) + "-01"
     end
     # 年の編集
-    atten_ymd.each do |ymd|
-      w_y_a = ymd.worked_on.year.to_s
-      w_y_genzai = w_y_a if cnt_y == 0 # 最古の年を初期値に設定、履歴が現在日に該当する年がない場合を最古の年を画面表示のデフォルト値として設定するため
-      cnt_y += 1
-      if w_y_a != w_y_b
-        @log_y[w_y_a] = w_y_a
-        if w_y_hyouji == ""
-          if w_y_hyouji == w_y_a # デフォルト値の決定
-            @w_cnt_y = w_y_a
-            w_y_genzai = w_y_a
-          end
-        end
-      end
-      w_y_b = w_y_a
-    end
+    # atten_ymd.each do |ymd|
+    #   w_y_a = ymd.worked_on.year.to_s
+    #   w_y_genzai = w_y_a if cnt_y == 0 # 最古の年を初期値に設定、履歴が現在日に該当する年がない場合を最古の年を画面表示のデフォルト値として設定するため
+    #   cnt_y += 1
+    #   if w_y_a != w_y_b
+    #     @log_y[w_y_a] = w_y_a
+    #     if w_y_hyouji == ""
+    #       if w_y_hyouji == w_y_a # デフォルト値の決定
+    #         @w_cnt_y = w_y_a
+    #         w_y_genzai = w_y_a
+    #       end
+    #     end
+    #   end
+    #   w_y_b = w_y_a
+    # end
     # 月の編集
-    m_flg = false
+    # m_flg = false
+    # atten_ymd.each do |ymd|
+    #   w_y_a = ymd.worked_on.year.to_s
+    #   if w_y_genzai == w_y_a
+    #     w_ym_a = ymd.worked_on.year.to_s + format('%02d', ymd.worked_on.month)
+    #     if w_ym_a != w_ym_b
+    #       @log_m[w_ym_a.slice(4..6)] = w_ym_a
+    #       tmpm = w_y_hyouji_m
+    #       if tmpm.slice(5..6) == w_ym_a.slice(4..5) # デフォルト値の決定
+    #         @w_cnt_m = w_ym_a
+    #         m_flg = true
+    #       else
+    #         unless m_flg
+    #           @w_cnt_m = w_ym_a
+    #         end
+    #       end
+    #     end
+    #   end
+    #   w_ym_b = w_ym_a
+    # end
+    # 年月の編集
+    
+    puts "wk_gamen, w_ym_hyouji"
+    puts wk_gamen
+    puts w_ym_hyouji
+
+    w_ym_b = "0"
     atten_ymd.each do |ymd|
-      w_y_a = ymd.worked_on.year.to_s
-      if w_y_genzai == w_y_a
-        w_ym_a = ymd.worked_on.year.to_s + format('%02d', ymd.worked_on.month)
-        if w_ym_a != w_ym_b
-          @log_m[w_ym_a.slice(4..6)] = w_ym_a
-          tmpm = w_y_hyouji_m
-          if tmpm.slice(5..6) == w_ym_a.slice(4..5) # デフォルト値の決定
-            @w_cnt_m = w_ym_a
-            m_flg = true
-          else
-            unless m_flg
-              @w_cnt_m = w_ym_a
-            end
+      w_ym_a = ymd.worked_on.year.to_s + format('%02d', ymd.worked_on.month)
+      w_ym_genzai = w_ym_a if cnt_ym == 0 # 最古の年を初期値に設定、履歴が現在日に該当する年がない場合を最古の年を画面表示のデフォルト値として設定するため
+      cnt_ym += 1
+      
+      puts "w_ym_a, w_ym_genzai"
+      puts w_ym_a
+      puts w_ym_genzai
+
+      if w_ym_a != w_ym_b
+        @log_ym[w_ym_a] = w_ym_a
+        if w_ym_hyouji.present?
+          if w_ym_hyouji == w_ym_a # デフォルト値の決定
+            @w_cnt_ym = w_ym_a
+            @w_cnt_y = w_ym_a.slice(0..3)
+            @w_cnt_mm = w_ym_a.slice(4..5)
           end
+        else
+          # 最古の勤怠ログの年月を設定
+          @w_cnt_ym = w_ym_genzai
+          @w_cnt_y = w_ym_genzai.slice(0..3)
+          @w_cnt_mm = w_ym_genzai.slice(4..5)
         end
       end
       w_ym_b = w_ym_a
     end
+    if @w_cnt_ym.blank?
+      @w_cnt_ym = w_ym_genzai
+      @w_cnt_y = w_ym_genzai.slice(0..3)
+      @w_cnt_mm = w_ym_genzai.slice(4..5)
+    end
+  
+    puts "@w_cnt_ym, @w_cnt_y, @w_cnt_m"
+    puts @w_cnt_ym
+    puts @w_cnt_y
+    puts @w_cnt_mm
+
     # デフォルト年月より取得開始年月日と取得終了年月日を設定
-    str_target_day = @w_cnt_y + @w_cnt_m + "01"
+    #if wk_gamen.present?
+    #  str_target_day = @w_cnt_m + "01"
+    #else
+      str_target_day = @w_cnt_ym + "01"
+    #end
     from_target_day = str_target_day.to_date.beginning_of_month
     to_target_day = from_target_day.end_of_month
     # 一覧表示用-----------------------------------------------------------------------------------------100
